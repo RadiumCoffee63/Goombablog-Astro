@@ -21,7 +21,8 @@ import Graph from '../../components/Graph.astro';
 import graphData from '../../data/Graph/links.json';
 
 //写在正文部分 注意一篇文章内id不要重复
-//<Graph data={graphData} id="test" />
+<Graph data={graphData} id="links" showLabel={true} />
+//showLabel可以不写,布尔值
 ```
 json格式如:
 ```
@@ -130,7 +131,7 @@ json格式如:
 ><Graph data={graphData} id="links" showLabel={true} />
 
 :::note
-**Graph 组件新增功能 ✨**
+**Graph 组件新增功能 **
 - **字体显示开关**：支持 `showLabel` 参数控制标签显示（默认 `true`）
 - **文字随缩放缩放**：文字会跟随关系图缩放而自动调整大小
 - **平滑缩放**：优化了缩放参数，使缩放更加流畅
@@ -153,7 +154,7 @@ json格式如:
 - 支持深色/浅色主题的按钮样式
 - 实时更新 label 状态，不影响已有数据
 
-详见 GitHub: [Graph.astro 最新版本](https://github.com/Cirnoqwa/bakablog_astro/blob/main/src/components/Graph.astro)
+详见 GitHub: [Graph.astro 最新版本](https://github.com/Cirnoqwa/bakablog-astro/blob/main/src/components/Graph.astro)
 :::
 
 ---
