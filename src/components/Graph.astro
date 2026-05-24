@@ -49,6 +49,9 @@ const { data, id = 'main', showLabel = true } = Astro.props;
   import { TooltipComponent, LegendComponent, TitleComponent } from 'echarts/components';
   import { CanvasRenderer } from 'echarts/renderers';
 
+  const chartInstances = new Map<HTMLElement, any>();
+  const labelStates = new Map<string, boolean>();
+
   echarts.use([GraphChart, TooltipComponent, LegendComponent, TitleComponent, CanvasRenderer]);
   
   function isDarkMode() {
@@ -56,8 +59,6 @@ const { data, id = 'main', showLabel = true } = Astro.props;
   }
 
   const resizeHandlers = new Map<HTMLElement, () => void>();
-  const chartInstances = new Map<HTMLElement, any>();
-  const labelStates = new Map<string, boolean>();
 
   function initAllGraphs() {
     const containers = document.querySelectorAll('.echarts-trigger-canvas');
@@ -179,6 +180,12 @@ const { data, id = 'main', showLabel = true } = Astro.props;
 
       myChart.setOption(option);
 
+      const placeholder = htmlEl.parentElement?.querySelector('.graph-loading-placeholder');
+
+       if (placeholder) {
+        (placeholder as HTMLElement).style.display = 'none';
+      }
+      
       myChart.getZr().on('click', (params: any) => {
         if (!params.target) {
           myChart!.dispatchAction({ type: 'unfocusNodeAdjacency', seriesIndex: 0 });
@@ -238,29 +245,44 @@ const { data, id = 'main', showLabel = true } = Astro.props;
   }
 
   function toggleLabels(containerId: string) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    const chart = chartInstances.get(container);
-    if (!chart) return;
+  const currentState = labelStates.get(containerId) ?? true;
+  const newState = !currentState;
+  labelStates.set(containerId, newState);
 
-    const newState = !labelStates.get(containerId);
-    labelStates.set(containerId, newState);
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const chart = chartInstances.get(container);
+  if (!chart) return;
 
-    const currentOption = chart.getOption();
-    if (currentOption.series && currentOption.series[0]) {
-      const series = currentOption.series[0];
-      series.label.show = newState;
-      if (series.data) series.data.forEach((node: any) => { if (node.label) node.label.show = newState; });
-      if (series.edges) series.edges.forEach((edge: any) => { if (edge.label) edge.label.show = newState && !!(edge.value || edge.label.formatter); });
-      chart.setOption(currentOption);
+  const currentOption = chart.getOption();
+  if (currentOption.series && currentOption.series[0]) {
+    const series = currentOption.series[0];
+    series.label.show = newState;
+    if (series.data) {
+      series.data.forEach((node: any) => {
+        if (node.label) node.label.show = newState;
+      });
     }
-
-    // 只改这里：显式管理 active 类名，确保不会变蓝无法回退
-    const button = document.querySelector(`.label-toggle-btn[data-target="${containerId}"]`) as HTMLElement;
-    if (button) {
-      newState ? button.classList.add('active') : button.classList.remove('active');
+    if (series.edges) {
+      series.edges.forEach((edge: any) => {
+        if (edge.label) edge.label.show = newState && !!(edge.value || edge.label.formatter);
+      });
     }
+    chart.setOption(currentOption);
   }
+
+  // 显式管理 active 类名
+  const button = document.querySelector(
+    `.label-toggle-btn[data-target="${containerId}"]`
+  ) as HTMLElement;
+  if (button) {
+    if (newState) {
+      button.classList.add('active');
+    } else {
+      button.classList.remove('active');
+    }  
+  }   
+}     
 
   function handleZoom(containerId: string, direction: 'in' | 'out') {
     const container = document.getElementById(containerId);
@@ -317,9 +339,12 @@ const { data, id = 'main', showLabel = true } = Astro.props;
     buttons.forEach((btn) => {
       const containerId = btn.getAttribute('data-target');
       if (containerId && labelStates.has(containerId)) {
-        const isActive = labelStates.get(containerId);
+        //const isActive = labelStates.get(containerId);
+        const isActive = labelStates.get(containerId) ?? true;
         if (isActive) {
           btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
         }
       }
     });
@@ -402,6 +427,7 @@ const { data, id = 'main', showLabel = true } = Astro.props;
     attributes: true,
     attributeFilter: ['class', 'data-theme']
   });
+
 </script>
 
 <style>
