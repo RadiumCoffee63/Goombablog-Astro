@@ -14,18 +14,18 @@ const { data, id = 'main', showLabel = true } = Astro.props;
 
 <div class="mod-graph-container">
   <div class="graph-controls">
-    <button class="zoom-btn zoom-out-btn" data-target={id} title="放大">
+    <button class="zoom-btn zoom-out-btn" data-target={id} title="缩小">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        <line x1="8" y1="11" x2="14" y2="11"></line>
+      </svg>
+    </button>
+    <button class="zoom-btn zoom-in-btn" data-target={id} title="放大">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         <line x1="11" y1="8" x2="11" y2="14"></line>
-        <line x1="8" y1="11" x2="14" y2="11"></line>
-      </svg>
-    </button>
-    <button class="zoom-btn zoom-in-btn" data-target={id} title="缩小">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         <line x1="8" y1="11" x2="14" y2="11"></line>
       </svg>
     </button>
@@ -155,10 +155,10 @@ const { data, id = 'main', showLabel = true } = Astro.props;
           layout: 'force',
           roam: true,
           draggable: true,
-          //缩放速度 - 降低使缩放更平滑
-          nodeScaleRatio: 0.5,
+          //缩放速度 - 降低使缩放更好
+          nodeScaleRatio: 0.3,
           //缩放比例
-          scaleLimit: { min: 0.2, max: 30 },
+          scaleLimit: { min: 0.2, max: 40 },
           focusNodeAdjacency: true,
           animation: true,
           layoutAnimation: true,
@@ -299,7 +299,7 @@ const { data, id = 'main', showLabel = true } = Astro.props;
 
       // 模拟滚轮事件（修正方向：in为上滚缩小deltaY，out为下滚放大deltaY）
       const wheelEvent = new WheelEvent('wheel', {
-        deltaY: direction === 'in' ? -120 : 120,
+        deltaY: direction === 'in' ? 120 : -120,
         clientX: rect.left + centerX,
         clientY: rect.top + centerY,
         bubbles: true,
