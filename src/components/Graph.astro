@@ -1,0 +1,309 @@
+---
+interface Props {
+  data: {
+    categories?: Array<{ name: string }>;
+    nodes: Array<{ id: string; name: string; symbolSize?: number; category?: number; icon?: string; color?: string; info?: string; [key: string]: any }>;
+    links: Array<{ source: string; target: string; value?: string; label?: string; info?: string; color?: string; [key: string]: any }>;
+  };
+  id?: string;
+  showLabel?: boolean;
+}
+
+const { data, id = 'main', showLabel = true } = Astro.props;
+---
+
+<div class="mod-graph-container">
+  <div class="graph-controls">
+    <button class="label-toggle-btn" data-target={id} title="切换标签显示">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 7h16M4 12h16M4 17h16"></path>
+      </svg>
+      标签
+    </button>
+  </div>
+  <div class="graph-loading-placeholder">
+    <div class="spinner"></div>
+    <span>加载关系图中...</span>
+  </div>
+  <div id={id} class="echarts-trigger-canvas" data-graph-content={JSON.stringify(data)} data-show-label={showLabel}></div>
+</div>
+
+<script>
+  import * as echarts from 'echarts/core';
+  import { GraphChart } from 'echarts/charts';
+  import { TooltipComponent, LegendComponent, TitleComponent } from 'echarts/components';
+  import { CanvasRenderer } from 'echarts/renderers';
+
+  echarts.use([GraphChart, TooltipComponent, LegendComponent, TitleComponent, CanvasRenderer]);
+  
+  function isDarkMode() {
+    return document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark';
+  }
+
+  const resizeHandlers = new Map<HTMLElement, () => void>();
+  const chartInstances = new Map<HTMLElement, any>();
+  const labelStates = new Map<string, boolean>();
+
+  function initAllGraphs() {
+    const containers = document.querySelectorAll('.echarts-trigger-canvas');
+    const isDark = isDarkMode();
+    
+    const themeTextColor = isDark ? '#e2e8f0' : '#1e293b';
+    const themeLineColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.15)';
+    const themeBgColor = isDark ? '#15171c' : '#f8fafc';
+
+    containers.forEach((container) => {
+      const htmlEl = container as HTMLElement;
+      let myChart = echarts.getInstanceByDom(htmlEl);
+      if (myChart) myChart.dispose();
+
+      myChart = echarts.init(htmlEl, isDark ? 'dark' : undefined);
+      chartInstances.set(htmlEl, myChart);
+
+      const rawData = htmlEl.getAttribute('data-graph-content');
+      if (!rawData) return;
+      const graphData = JSON.parse(rawData);
+      
+      const containerId = htmlEl.id;
+      const initialShowLabel = htmlEl.getAttribute('data-show-label') !== 'false';
+      labelStates.set(containerId, initialShowLabel);
+
+      // 动态颜色提取逻辑
+      const categoryColors = graphData.categories 
+        ? graphData.categories.map((c: any) => c.color || '#cbd5e1') 
+        : ['#74D1EA', '#39C5BB', '#A0AEC0'];
+
+      const nodes = graphData.nodes ? graphData.nodes.map((node: any) => ({
+        id: node.id,
+        name: node.name,
+        symbol: node.icon ? `image://${node.icon}` : 'circle',
+        symbolSize: node.symbolSize || 35, 
+        category: node.category,
+        info: node.info,
+        itemStyle: {
+          color: node.color || undefined, 
+          borderColor: node.color || '#cbd5e1',
+          borderWidth: 1.5,
+          shadowBlur: 6,
+          shadowColor: node.color 
+            ? `color-mix(in srgb, ${node.color} 33%, rgba(0,0,0,0.15))` 
+            : 'rgba(0,0,0,0.15)'
+        },
+        label: { show: initialShowLabel, position: 'bottom', color: themeTextColor, fontSize: 12, distance: 8 }
+      })) : [];
+
+      const edges = graphData.links ? graphData.links.map((link: any) => ({
+        ...link,
+        label: { 
+          show: initialShowLabel && !!(link.value || link.label), 
+          formatter: link.value || link.label, 
+          fontSize: 11, 
+          color: isDark ? '#94a3b8' : '#64748b',
+          distance: 6
+        },
+        lineStyle: { 
+          color: link.color || themeLineColor, 
+          width: 1.5, 
+          curveness: 0 
+        }
+      })) : [];
+
+      const option = {
+        backgroundColor: themeBgColor,
+        color: categoryColors,
+        tooltip: { 
+          trigger: 'item',
+          enterable: true,
+          hideDelay: 100,
+          transitionDuration: 0.2,
+          renderMode: 'html',
+          extraCssText: 'z-index: 1000; pointer-events: auto; max-width: 300px; border-radius: 8px;',
+          formatter: (params: any) => {
+            if (params.dataType === 'edge') return params.data.info || params.data.value || '连接';
+            if (params.dataType === 'node') {
+              return params.data.info 
+                ? `<div style="padding: 8px; pointer-events: auto;">
+                     <strong style="font-size:14px; display:block; margin-bottom:6px;">${params.data.name}</strong>
+                     <div style="border-top:1px solid rgba(128,128,128,0.2); padding-top:6px;">${params.data.info}</div>
+                   </div>` 
+                : `<div style="padding: 6px;"><strong>${params.data.name}</strong></div>`;
+            }
+          }
+        },
+        legend: graphData.categories ? {
+          data: graphData.categories.map((c: any) => c.name),
+          textStyle: { color: themeTextColor },
+          top: '10px'
+        } : undefined,
+        series: [{
+          type: 'graph',
+          layout: 'force',
+          roam: true,
+          draggable: true,
+          //缩放速度 - 降低使缩放更平滑
+          nodeScaleRatio: 0.5,
+          //缩放比例
+          scaleLimit: { min: 0.2, max: 30 },
+          focusNodeAdjacency: true,
+          animation: true,
+          layoutAnimation: true,
+          data: nodes,
+          edges: edges,
+          categories: graphData.categories,
+          label: {
+            show: initialShowLabel,
+            fontSize: 12,
+            // 文字随节点一起进行仿射变换（随缩放而缩放）
+            position: 'bottom',
+            distance: 8
+          },
+          //拖动速度
+          force: { repulsion: 300, edgeLength: 60, gravity: 0.08, friction: 0.5 } //friction:摩擦力0.2 - 0.6
+        }]
+      };
+
+      myChart.setOption(option);
+
+      myChart.getZr().on('click', (params: any) => {
+        if (!params.target) {
+          myChart!.dispatchAction({ type: 'unfocusNodeAdjacency', seriesIndex: 0 });
+          myChart!.dispatchAction({ type: 'hideTip' });
+        }
+      });
+
+      const handler = () => myChart?.resize();
+      window.addEventListener('resize', handler);
+      resizeHandlers.set(htmlEl, handler);
+    });
+  }
+
+  function toggleLabels(containerId: string) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const chart = chartInstances.get(container);
+    if (!chart) return;
+
+    const currentState = labelStates.get(containerId) ?? true;
+    const newState = !currentState;
+    labelStates.set(containerId, newState);
+
+    // 获取当前option并更新label显示状态
+    const currentOption = chart.getOption();
+    if (currentOption.series && currentOption.series[0]) {
+      const series = currentOption.series[0];
+      
+      // 更新节点标签
+      series.label.show = newState;
+      if (series.data) {
+        series.data.forEach((node: any) => {
+          if (node.label) {
+            node.label.show = newState;
+          }
+        });
+      }
+
+      // 更新边的标签
+      if (series.edges) {
+        series.edges.forEach((edge: any) => {
+          if (edge.label) {
+            edge.label.show = newState && !!(edge.value || edge.label.formatter);
+          }
+        });
+      }
+
+      chart.setOption(currentOption);
+    }
+
+    // 更新按钮状态
+    const button = document.querySelector(`[data-target="${containerId}"]`) as HTMLElement;
+    if (button) {
+      button.classList.toggle('active', newState);
+    }
+  }
+
+  // 初始化时设置按钮状态
+  function initializeButtons() {
+    const buttons = document.querySelectorAll('.label-toggle-btn');
+    buttons.forEach((btn) => {
+      const containerId = btn.getAttribute('data-target');
+      if (containerId && labelStates.has(containerId)) {
+        const isActive = labelStates.get(containerId);
+        if (isActive) {
+          btn.classList.add('active');
+        }
+      }
+    });
+  }
+
+  // 按钮点击事件
+  document.addEventListener('click', (e: Event) => {
+    const target = e.target as HTMLElement;
+    const btn = target.closest('.label-toggle-btn');
+    if (btn) {
+      const containerId = btn.getAttribute('data-target');
+      if (containerId) {
+        toggleLabels(containerId);
+      }
+    }
+  });
+
+  document.addEventListener('astro:page-load', () => {
+    initAllGraphs();
+    setTimeout(initializeButtons, 100);
+  });
+  
+  initAllGraphs();
+  setTimeout(initializeButtons, 100);
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'class' || mutation.attributeName === 'data-theme') {
+        initAllGraphs();
+        setTimeout(initializeButtons, 100);
+      }
+    });
+  });
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class', 'data-theme']
+  });
+</script>
+
+<style>
+  .mod-graph-container { 
+    position: relative; width: 100%; height: 550px; border-radius: 12px; overflow: hidden; margin: 25px 0; 
+    border: 1px solid rgba(128, 128, 128, 0.15); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); 
+    touch-action: none; 
+  }
+  .graph-controls {
+    position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; gap: 8px;
+  }
+  .label-toggle-btn {
+    display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px;
+    background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.3s ease;
+  }
+  .label-toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.08); border-color: rgba(0, 0, 0, 0.15);
+  }
+  .label-toggle-btn.active {
+    background: #3b82f6; color: white; border-color: #3b82f6;
+  }
+  :global(.dark) .label-toggle-btn {
+    background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15);
+    color: #94a3b8;
+  }
+  :global(.dark) .label-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.2);
+  }
+  :global(.dark) .label-toggle-btn.active {
+    background: #3b82f6; color: white; border-color: #3b82f6;
+  }
+  .echarts-trigger-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; background: transparent !important; }
+  .graph-loading-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 14px; color: #64748b; }
+  :global(.dark) .graph-loading-placeholder { color: #94a3b8; background-color: #15171c; }
+  .spinner { width: 28px; height: 28px; border: 3px solid rgba(128, 128, 128, 0.2); border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
