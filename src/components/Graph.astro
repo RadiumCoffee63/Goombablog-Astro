@@ -94,7 +94,7 @@ const { data, id = 'main', showLabel = true } = Astro.props;
         name: node.name,
         symbol: node.icon ? `image://${node.icon}` : 'circle',
         //木勾盒子大小
-        symbolSize: node.symbolSize || 50, 
+        symbolSize: node.symbolSize || 35, 
         category: node.category,
         info: node.info,
         itemStyle: {
@@ -160,7 +160,7 @@ const { data, id = 'main', showLabel = true } = Astro.props;
           draggable: true,
           nodeScaleRatio: 0.12,
           //限制缩放范围,缩放后大小变化的限制,改小了就纯SB
-          scaleLimit: { min: 0.2, max: 50 },
+          scaleLimit: { min: 0.2, max: 40 },
           focusNodeAdjacency: true,
           animation: true,
           animationDurationUpdate: 350,
@@ -217,8 +217,8 @@ const { data, id = 'main', showLabel = true } = Astro.props;
         if (x == null || y == null) return;
 
         //神秘乐子木勾拖动速度,改慢了霍金,改快了堪比爱泼斯坦找小孩
-        const dx = (x - dragLastX) * 0.4;
-        const dy = (y - dragLastY) * 0.4;
+        const dx = (x - dragLastX) * 0.2;
+        const dy = (y - dragLastY) * 0.2;
 
         if (dx || dy) {
           myChart.dispatchAction({ type: 'graphRoam', seriesIndex: 0, dx, dy });
