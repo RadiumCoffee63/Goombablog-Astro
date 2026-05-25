@@ -51,6 +51,15 @@
       "info": "wnqs0628制作的黑科技鸡丁派。<br/>源码: <a href='https://github.com/wnqs0628/KingDingPI' target='_blank'>点击访问</a>"
     },
     { 
+      "id": "jd2", 
+      "name": "wnqs0628/KingDingPi_v2", 
+      "symbolSize": 45, 
+      "category": 1,
+      "color": "#39C5BB",
+      "icon": "/Graph/links/e9.jpg",
+      "info": "wnqs0628制作的黑科技鸡丁派2.0。<br/>源码: <a href='https://github.com/wnqs0628/KiDingPi_v2' target='_blank'>点击访问</a>"
+    },
+    { 
       "id": "scfdev", 
       "name": "生存斧DEV", 
       "symbolSize": 35, 
@@ -82,6 +91,8 @@
     { "source": "self", "target": "atomforge", "color": "#74D1EA", "info":"联通皮古拉" },
     { "source": "self", "target": "jd", "color": "yellow", "info":"黑科技鸡丁派" },
     { "source": "brial", "target": "jd", "color": "black", "info":"黑科技鸡丁派" },
+    { "source": "self", "target": "jd2", "color": "yellow", "info":"黑科技鸡丁派2.0" },
+    { "source": "brial", "target": "jd2", "color": "black", "info":"黑科技鸡丁派2.0" },
     { "source": "self", "target": "sbcmd", "color": "red", "info":"专业讨伐爱玩电脑的CMD" },
     { "source": "marblemc", "target": "scfdev", "value": "子链接" },
     { "source": "marblemc", "target": "scaxe", "value": "子链接" }
