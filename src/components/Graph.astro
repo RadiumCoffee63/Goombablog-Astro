@@ -513,7 +513,8 @@ const { data, id = 'main', showLabel = true } = Astro.props;
     border-color: #3b82f6 !important;
   }
   @media (max-width: 640px) {
-    .graph-controls { top: 5px !important; right: 5px !important; gap: 4px !important; }
+    .graph-controls { left: 10px !important; bottom: 10px !important; top: auto !important; right: auto !important; gap: 10px !important; flex-direction: column; }
+    .zoom-btn, .label-toggle-btn { width: 40px; }
     .label-toggle-btn span { display: none !important; } /* 仅隐藏文字，图标保留 */
   }
 </style>
