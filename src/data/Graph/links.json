@@ -87,7 +87,7 @@
   ],
   "links": [
     { "source": "self", "target": "marblemc", "info":"么么哒,Romarku" },
-    { "source": "marblemc", "target": "brial", "color": "red", "info":"竞争⚠️⚠️⚠️<br/><video src=\"/Graph/links/sbromarku.mp4\" controls="controls"></video>" },
+    { "source": "marblemc", "target": "brial", "color": "red", "info":"竞争⚠️⚠️⚠️<br/><video src='/Graph/links/sbromarku.mp4' controls='controls'></video>" },
     { "source": "self", "target": "brial" },
     { "source": "self", "target": "atomforge", "color": "#74D1EA", "info":"联通皮古拉" },
     { "source": "self", "target": "jd", "color": "yellow", "info":"黑科技鸡丁派" },
