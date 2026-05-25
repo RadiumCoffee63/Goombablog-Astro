@@ -52,7 +52,7 @@
     },
     { 
       "id": "jd2", 
-      "name": "wnqs0628/KingDingPi_v2", 
+      "name": "wnqs0628/KiDingPi_v2", 
       "symbolSize": 45, 
       "category": 1,
       "color": "#39C5BB",
@@ -87,6 +87,7 @@
   ],
   "links": [
     { "source": "self", "target": "marblemc", "info":"么么哒,Romarku" },
+    { "source": "marblemc", "target": "brial", "color": "red", "info":"竞争⚠️⚠️⚠️" },
     { "source": "self", "target": "brial" },
     { "source": "self", "target": "atomforge", "color": "#74D1EA", "info":"联通皮古拉" },
     { "source": "self", "target": "jd", "color": "yellow", "info":"黑科技鸡丁派" },
