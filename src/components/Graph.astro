@@ -149,6 +149,7 @@ const { data, id = 'main', showLabel = true } = Astro.props;
         legend: graphData.categories ? {
           data: graphData.categories.map((c: any) => c.name),
           textStyle: { color: themeTextColor },
+          left: '10px',
           top: '10px'
         } : undefined,
         series: [{
@@ -156,12 +157,12 @@ const { data, id = 'main', showLabel = true } = Astro.props;
           layout: 'force',
           roam: true,
           draggable: true,
-          //缩放速度 - 降低使缩放更好
-          nodeScaleRatio: 0.3,
-          //缩放比例
-          scaleLimit: { min: 0.2, max: 40 },
+          nodeScaleRatio: 0.12,
+          scaleLimit: { min: 0.2, max: 18 },
           focusNodeAdjacency: true,
           animation: true,
+          animationDurationUpdate: 350,
+          animationEasingUpdate: 'cubicOut',
           layoutAnimation: true,
           data: nodes,
           edges: edges,
@@ -169,12 +170,10 @@ const { data, id = 'main', showLabel = true } = Astro.props;
           label: {
             show: initialShowLabel,
             fontSize: 12,
-            // 文字随节点一起进行仿射变换（随缩放而缩放）
             position: 'bottom',
             distance: 8
           },
-          //拖动速度
-          force: { repulsion: 300, edgeLength: 60, gravity: 0.08, friction: 0.5 } //friction:摩擦力0.2 - 0.6
+          force: { repulsion: 250, edgeLength: 75, gravity: 0.12, layoutAnimation: true }
         }]
       };
 
@@ -193,6 +192,51 @@ const { data, id = 'main', showLabel = true } = Astro.props;
         }
       });
 
+      // 背景区域拖动平移支持
+      let isBackgroundDragging = false;
+      let dragLastX = 0;
+      let dragLastY = 0;
+
+      myChart.getZr().on('mousedown', (params: any) => {
+        if (!params.target) {
+          isBackgroundDragging = true;
+          const event = params.event;
+          dragLastX = event.offsetX ?? event.zrX ?? 0;
+          dragLastY = event.offsetY ?? event.zrY ?? 0;
+        }
+      });
+
+      myChart.getZr().on('mousemove', (params: any) => {
+        if (!isBackgroundDragging) return;
+        const event = params.event;
+        const x = event.offsetX ?? event.zrX;
+        const y = event.offsetY ?? event.zrY;
+        if (x == null || y == null) return;
+
+        //神秘乐子木勾拖动速度,改慢了霍金,改快了堪比爱泼斯坦找小孩
+        const dx = (x - dragLastX) * 0.4;
+        const dy = (y - dragLastY) * 0.4;
+
+        if (dx || dy) {
+          myChart.dispatchAction({ type: 'graphRoam', seriesIndex: 0, dx, dy });
+          dragLastX = x;
+          dragLastY = y;
+        }
+      });
+
+      myChart.getZr().on('mouseup', () => {
+        isBackgroundDragging = false;
+      });
+      myChart.getZr().on('globalout', () => {
+        isBackgroundDragging = false;
+      });
+
+      htmlEl.addEventListener('wheel', (e: WheelEvent) => {
+        // 检查鼠标是否在图表容器内,不在的话,就直接拉去平壤墙壁
+        e.preventDefault();
+        e.stopPropagation();
+      }, { passive: false });
+
       // 手机端触摸缩放支持
       let touchStartDistance = 0;
       htmlEl.addEventListener('touchstart', (e: TouchEvent) => {
@@ -210,22 +254,11 @@ const { data, id = 'main', showLabel = true } = Astro.props;
           const currentDistance = Math.sqrt(dx * dx + dy * dy);
           const scale = currentDistance / touchStartDistance;
 
-          if (scale > 1.05) {
-            // 两指分开，放大
+          if (Math.abs(scale - 1) > 0.015) {
+            //乐子触摸缩放速度,-40 到 40 是范围,150 是倍数,都改小会更平缓,因为又慢又sb
+            const deltaY = Math.max(-20, Math.min(20, Math.round((1 - scale) * 150)));
             const wheelEvent = new WheelEvent('wheel', {
-              deltaY: -120,
-              clientX: (e.touches[0].clientX + e.touches[1].clientX) / 2,
-              clientY: (e.touches[0].clientY + e.touches[1].clientY) / 2,
-              bubbles: true,
-              cancelable: true,
-              view: window
-            });
-            htmlEl.querySelector('canvas')?.dispatchEvent(wheelEvent);
-            touchStartDistance = currentDistance;
-          } else if (scale < 0.95) {
-            // 两指靠近，缩小
-            const wheelEvent = new WheelEvent('wheel', {
-              deltaY: 120,
+              deltaY,
               clientX: (e.touches[0].clientX + e.touches[1].clientX) / 2,
               clientY: (e.touches[0].clientY + e.touches[1].clientY) / 2,
               bubbles: true,
@@ -295,7 +328,7 @@ const { data, id = 'main', showLabel = true } = Astro.props;
     if (!currentOption.series || !currentOption.series[0]) return;
 
     const series = currentOption.series[0];
-    const zoomFactor = 1.2;
+    const zoomFactor = 1.12;
     
     // 获取当前的缩放和偏移
     let currentZoom = 1;
@@ -319,9 +352,10 @@ const { data, id = 'main', showLabel = true } = Astro.props;
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
 
-      // 模拟滚轮事件（修正方向：in为上滚缩小deltaY，out为下滚放大deltaY）
+      // 模拟滚轮,in为上滚缩小deltaY，out为下滚放大deltaY
       const wheelEvent = new WheelEvent('wheel', {
-        deltaY: direction === 'in' ? 120 : -120,
+        //野鸡按钮缩放速度,谁用谁就得受着,in是放大,所以deltaY应该是负的,out是缩小,所以deltaY应该是正的,再用能用成大SB
+        deltaY: direction === 'in' ? 100 : -100,
         clientX: rect.left + centerX,
         clientY: rect.top + centerY,
         bubbles: true,
@@ -435,6 +469,10 @@ const { data, id = 'main', showLabel = true } = Astro.props;
     position: relative; width: 100%; height: 550px; border-radius: 12px; overflow: hidden; margin: 25px 0; 
     border: 1px solid rgba(128, 128, 128, 0.15); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); 
     touch-action: none; 
+    cursor: grab;
+  }
+  .mod-graph-container:active {
+    cursor: grabbing;
   }
   .graph-controls {
     position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; gap: 6px;
