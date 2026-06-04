@@ -7,15 +7,91 @@ image: "/sb/dsb.png"
 category: "乐子"
 draft: false
 ---
+>🐴的你出院的时候是怎么跟我保证的？
+>原因:在2026/6/4日他在群聊中发布了"用VBS入侵学校教室电脑"的消息,然后说"多媒体被入侵了,老师吓哭了",很豪 知道吗
+>他的神人VBS代码: <br />
 
->鉴于近日 爱玩电脑的CMD 戒豪，因此此文章基本作废。
+```VBScript
+Dim choice
+choice = MsgBox("运行此程序可能会导致系统不正常，是否仍要运行？", vbOKCancel + vbQuestion, "Microsoft Windows Defender")
 
+If choice = vbOK Then
+    MsgBox "此程序为玩笑程序，图个乐，不会损坏系统。" & vbCrLf & _
+           "即将出现大量随机系统风格弹窗，结束后请输入密码 114514 退出。", vbInformation, "玩笑程序说明"
+
+    Set WshShell = CreateObject("WScript.Shell")
+    Randomize
+
+    titles = Array( _
+        "Microsoft Windows", _
+        "Windows 资源管理器", _
+        "系统错误", _
+        "Windows Defender", _
+        "文件访问被拒绝", _
+        "磁盘检查", _
+        "注册表编辑器" _
+    )
+
+    contents = Array( _
+        "确实要把此文件放入回收站吗？C:\Windows\System32\config", _
+        "无法删除 System32：访问被拒绝。", _
+        "文件正在被另一个程序使用。", _
+        "找不到 'C:\Windows\System32\drivers\test.sys'。", _
+        "您需要管理员权限才能执行此操作。", _
+        "此操作无法完成，因为文件已在资源管理器中打开。", _
+        "Windows 无法访问指定设备、路径或文件。", _
+        "动态链接库 (DLL) 初始化例程失败。", _
+        "系统检测到可疑活动，建议立即扫描。", _
+        "不是有效的 Win32 应用程序。", _
+        "内存不足，请关闭部分程序。", _
+        "explorer.exe — 应用程序错误", _
+        "0x80070005 拒绝访问。", _
+        "磁盘空间不足，请清理系统盘。" _
+    )
+
+    styles = Array(0, 16, 32, 48, 64)
+
+    popupCount = 300
+
+    For i = 1 To popupCount
+        randomTitle = titles(Int(Rnd * UBound(titles) + 1))
+        randomContent = contents(Int(Rnd * UBound(contents) + 1))
+        randomStyle = styles(Int(Rnd * UBound(styles) + 1))
+
+        WshShell.Run "mshta vbscript:msgbox(""" & randomContent & """," & randomStyle & ",""" & randomTitle & """)(window.close)", 1, False
+
+        WScript.Sleep 1000
+    Next
+
+    correctNum = "114514"
+    Do
+        userInput = InputBox("弹窗已完成。请输入管理员密码以关闭程序。", "Microsoft Windows Defender", "")
+
+        If userInput = Empty Then
+            MsgBox "输入不能为空。", vbExclamation, "Microsoft Windows Defender"
+        Else
+            If userInput = correctNum Then
+                Set shell = CreateObject("WScript.Shell")
+                shell.Run "cmd /c taskkill /f /im mshta.exe", 0, True
+                MsgBox "密码正确！程序即将退出。", vbInformation, "Microsoft Windows Defender"
+                Exit Do
+            Else
+                MsgBox "密码错误！请重新输入。", vbCritical, "Microsoft Windows Defender"
+            End If
+        End If
+    Loop
+    
+ElseIf choice = vbCancel Then
+End If
+```
+
+>2026/5/下旬 鉴于近日 爱玩电脑的CMD 戒豪，因此此文章基本作废。
 ><img src="/sb/nb.jpg" alt="爱玩电脑的CMD牛逼666">
 
 ---
 
 
->*由于我突然觉得我似乎过于不合适重新修改了该帖子*
+>2026/5/15左右 *由于我突然觉得我似乎过于不合适重新修改了该帖子*
 
 ---
 
