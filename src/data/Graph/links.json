@@ -15,6 +15,15 @@
       "info": "Cirno_qwa制作"
     },
     { 
+      "id": "hkbox", 
+      "name": "BlackShell Mod", 
+      "symbolSize": 45, 
+      "category": 1,
+      "color": "#39C5BB",
+      "icon": "/Graph/links/hkbox.png",
+      "info": "NatSuri 开发。<br/><a href='https://blackshellx.org' target='_blank'>点击访问</a>"
+    },
+    { 
       "id": "marblemc", 
       "name": "大理石网", 
       "symbolSize": 45, 
@@ -89,6 +98,7 @@
     { "source": "self", "target": "marblemc", "info":"么么哒,Romarku" },
     { "source": "marblemc", "target": "brial", "color": "red", "info":"竞争⚠️⚠️⚠️<br/><video src='/Graph/links/sbromarku.mp4' controls='controls'></video>" },
     { "source": "self", "target": "brial" },
+    { "source": "self", "target": "hkbox", "color": "black", "info":"嘿客爸爸我错了😱😱😱😱" },
     { "source": "self", "target": "atomforge", "color": "#74D1EA", "info":"联通皮古拉" },
     { "source": "self", "target": "jd", "color": "yellow", "info":"黑科技鸡丁派" },
     { "source": "brial", "target": "jd", "color": "black", "info":"黑科技鸡丁派" },
