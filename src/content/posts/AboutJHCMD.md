@@ -1,6 +1,7 @@
 ---
 title: "关于爱玩电脑的CMD"
 published: 2026-05-25
+updated: 2026-06-04
 description: "「爱玩电脑的CMD」关于12岁精通计算机、我的世界指令对标json以及各类名场面的大赏"
 tags: ["乐子"]
 image: "/sb/dsb.png"
@@ -8,8 +9,10 @@ category: "乐子"
 draft: false
 ---
 >🐴的你出院的时候是怎么跟我保证的？
->原因:在2026/6/4日他在群聊中发布了"用VBS入侵学校教室电脑"的消息,然后说"多媒体被入侵了,老师吓哭了",很豪 知道吗
+>原因:在2026/6/4日他在群聊中发布了"用VBS入侵学校教室电脑"的消息,然后说"多媒体被入侵了,老师吓哭了",很豪 知道吗<br />
 >他的神人VBS代码: <br />
+<details> 
+<summary>展开以查看乐子VBS代码</summary>
 
 ```VBScript
 Dim choice
@@ -84,6 +87,7 @@ If choice = vbOK Then
 ElseIf choice = vbCancel Then
 End If
 ```
+</details> 
 
 >2026/5/下旬 鉴于近日 爱玩电脑的CMD 戒豪，因此此文章基本作废。
 ><img src="/sb/nb.jpg" alt="爱玩电脑的CMD牛逼666">
