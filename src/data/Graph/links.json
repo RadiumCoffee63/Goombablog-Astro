@@ -103,6 +103,7 @@
     { "source": "self", "target": "jd", "color": "yellow", "info":"黑科技鸡丁派" },
     { "source": "brial", "target": "jd", "color": "black", "info":"黑科技鸡丁派" },
     { "source": "self", "target": "jd2", "color": "yellow", "info":"黑科技鸡丁派2.0" },
+    { "source": "jd2", "target": "jd", "color": "yellow", "info":"黑科技鸡丁派" },
     { "source": "brial", "target": "jd2", "color": "black", "info":"黑科技鸡丁派2.0" },
     { "source": "self", "target": "sbcmd", "color": "red", "info":"专业讨伐爱玩电脑的CMD" },
     { "source": "marblemc", "target": "scfdev", "value": "子链接" },
