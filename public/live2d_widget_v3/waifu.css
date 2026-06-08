@@ -28,8 +28,7 @@
 	line-height: 0;
 	margin-bottom: -10px;
 	position: fixed;
-	will-change: transform; /* 提前告知浏览器该元素将频繁变化，启用 GPU 加速 */
-    transform: translateY(3px) translateZ(0);
+    transform: translateY(3px);
 	transition: transform .3s ease-in-out, bottom 3s ease-in-out;
 	z-index: 6767;
 	
@@ -315,7 +314,7 @@
 	}
 }
 
-#waifu-tool,
+/*#waifu-tool,
 #waifu-tool span {
     width: 35px !important;
     height: 35px !important;
@@ -335,4 +334,4 @@
     min-width: 25px !important;
     min-height: 25px !important;
     display: inline-block !important;
-}
+}*/
