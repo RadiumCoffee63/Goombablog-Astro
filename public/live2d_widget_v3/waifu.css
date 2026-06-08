@@ -28,9 +28,12 @@
 	line-height: 0;
 	margin-bottom: -10px;
 	position: fixed;
+	will-change: transform; /* 提前告知浏览器该元素将频繁变化，启用 GPU 加速 */
+    transform: translateZ(0); /* 强制开启独立的 GPU 图层 */
 	transform: translateY(3px);
 	transition: transform .3s ease-in-out, bottom 3s ease-in-out;
 	z-index: 6767;
+	
 }
 
 #waifu:hover {
@@ -311,4 +314,26 @@
 	0%, 100% {
 		transform: translate(0, 0) rotate(0);
 	}
+}
+
+#waifu-tool,
+#waifu-tool span {
+    width: 35px !important;
+    height: 35px !important;
+    max-width: 35px !important;
+    max-height: 35px !important;
+    display: block !important;
+    line-height: 35px !important;
+}
+
+#waifu-tool svg,
+#waifu-tool span svg,
+#waifu svg {
+    width: 25px !important;
+    height: 25px !important;
+    max-width: 25px !important;
+    max-height: 25px !important;
+    min-width: 25px !important;
+    min-height: 25px !important;
+    display: inline-block !important;
 }
