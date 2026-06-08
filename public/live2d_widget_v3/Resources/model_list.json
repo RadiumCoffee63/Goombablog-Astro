@@ -1,13 +1,15 @@
 {
     "models": [
-        ["ariu"],
+        
         ["Mao", "Rice", "Hiyori", "Haru"],
+        ["ariu"],
         ["Natori", "Mark"],
         ["Wanko"]
     ],
     "messages": [
-        ["看我嘿客入场。"],
+        
         ["你好，我是Mao", "你好，我是Rice", "你好，我是Hiyori", "你好，我是Haru"],
+        ["看我嘿客入场。"],
         ["你好，我是Naotri", "你好，我是Mark"],
         ["汪汪，我是Wanko"]
     ]
