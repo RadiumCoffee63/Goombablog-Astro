@@ -169,12 +169,9 @@ json格式如:
 ---
 
 >你可以在你的博客页脚/头部配置文件中添加此代码
-```javascript
-<link rel="stylesheet" href="https://bakablog.pages.dev/live2d_dist/waifu.css" />
-<script src="https://bakablog.pages.dev/live2d_dist/autoload.js"></script>
-```
 
->在Astro的/src/components/Footer.Astro中
+
+>在本Astro博客的/src/components/Footer.Astro中
 ```html
 ---
 
@@ -191,15 +188,81 @@ const currentYear = new Date().getFullYear();
     <div class="transition text-50 text-sm text-center">
         &copy; <span id="copyright-year">{currentYear}</span> {profileConfig.name}. All Rights Reserved. /
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href={url('rss.xml')}>RSS</a> /
-        <a class="transition link text-[var(--primary)] font-medium" target="_blank" href={url('sitemap-index.xml')}>Sitemap</a><br />
+        <a class="transition link text-[var(--primary)] font-medium" target="_blank" href={url('sitemap-index.xml')}>Sitemap</a><br>
         Powered by
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://astro.build">Astro</a> &
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://github.com/saicaca/fuwari">Fuwari</a>
-    </div>
-    //根据情况选择
-   <link rel="stylesheet" href="/live2d_dist/waifu.css" />
-   <script is:inline src="/live2d_dist/autoload.js"></script>
+    </div>  
+
+<script is:inline>
+  const LocalPatch = '/live2d_widget_v3';
+  const config = {
+    // 资源路径
+    path: {
+      homePath: '/',
+      modelPath: LocalPatch + "/Resources/",
+      cssPath: LocalPatch + "/waifu.css",
+      tipsJsonPath: LocalPatch + "/waifu-tips.json",
+      tipsJsPath: LocalPatch + "/waifu-tips.js",
+      live2dCorePath: LocalPatch + "/Core/live2dcubismcore.js",
+      live2dSdkPath: LocalPatch + "/live2d-sdk.js"
+    },
+    // 工具栏
+    //tools: ["hitokoto", "asteroids", "express", "switch-model", "switch-texture", "photo", "info", "quit"],
+    tools: ["hitokoto", "asteroids", "express", "switch-texture", "photo", "info", "quit"],
+    // 模型拖拽
+    drag: {
+      enable: true,
+      direction: ["x", "y"]
+    },
+    // 模型切换(order: 顺序切换，random: 随机切换)
+    switchType: "order"
+  }
+
+  // 加载资源并初始化
+  if (screen.width >= 768) {
+    Promise.all([
+      loadExternalResource(config.path.cssPath, "css"),
+      loadExternalResource(config.path.live2dCorePath, "js"),
+      loadExternalResource(config.path.live2dSdkPath, "js"),
+      loadExternalResource(config.path.tipsJsPath, "js")
+    ]).then(() => {
+      initWidget({
+        homePath: config.path.homePath,
+        waifuPath: config.path.tipsJsonPath,
+        cdnPath: config.path.modelPath,
+        tools: config.tools,
+        dragEnable: config.drag.enable,
+        dragDirection: config.drag.direction,
+        switchType: config.switchType
+      });
+    });
+  }
+
+  // 异步加载资源
+  function loadExternalResource(url, type) {
+    return new Promise((resolve, reject) => {
+      let tag;
+      if (type === "css") {
+        tag = document.createElement("link");
+        tag.rel = "stylesheet";
+        tag.href = url;
+      }
+      else if (type === "js") {
+        tag = document.createElement("script");
+        tag.src = url;
+      }
+      if (tag) {
+        tag.onload = () => resolve(url);
+        tag.onerror = () => reject(url);
+        document.head.appendChild(tag);
+      }
+    });
+  }
+</script>
+
 </div>
+
 ```
 *我也不是这方面的高玩,可能有些错误,欢迎指正*
 
