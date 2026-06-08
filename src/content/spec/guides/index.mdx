@@ -190,8 +190,8 @@ const currentYear = new Date().getFullYear();
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://astro.build">Astro</a> &
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://github.com/saicaca/fuwari">Fuwari</a>
     </div>  
-
-<script >
+</div>
+<script is:inline>
   function initLive2DWidget() {
     if (window.Live2DWidgetInitialized) return;
 
@@ -264,8 +264,6 @@ const currentYear = new Date().getFullYear();
   initLive2DWidget();
   document.addEventListener("astro:page-load", initLive2DWidget);
 </script>
-
-</div>
 ```
 *我也不是这方面的高玩,可能有些错误,欢迎指正*
 
