@@ -3,9 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 interface Props {
-  dir?: string;        // 默认是 /public/downloads,你手动配置就变成public了
-  showSize?: boolean;   // 是否显示文件大小，默认 true
-  showTrack?: boolean;    // 是否显示更新时间，默认 true
+  dir?: string;            
+  showSize?: boolean;    // 是否显示文件大小
+  showTrack?: boolean;  // 是否显示更新时间
 }
 
 const { 
@@ -114,51 +114,47 @@ const fileTree = readDirectory(TARGET_DIR);
 
   <div class="bg-zinc-50/50 dark:bg-zinc-950/30 border border-black/5 dark:border-white/5 rounded-xl p-4 shadow-inner">
     {fileTree.length === 0 ? (
-      <p class="text-zinc-400 text-center py-6 text-sm">暂无可用下载文件，/public/{dir}/ 里没有东西...</p>
+      <p class="text-zinc-400 text-center py-6 text-sm">暂无可用下载文件...</p>
     ) : (
       <ul class="file-tree-root space-y-1 m-0 p-0">
-        {fileTree.map(node => <Fragment set:html={renderNode(node, showSize, showTrack)} />)}
+        {fileTree.map(node => <Astro.self define:vars={{ node, showSize, showTrack }} render-node={node} />)}
       </ul>
     )}
   </div>
 </div>
 
----
-function renderNode(node: FileNode, showSize: boolean, showTrack: boolean): string {
+{Astro.props['render-node'] && (() => {
+  const node = Astro.props['render-node'] as FileNode;
   if (node.type === 'directory') {
-    return `
-      <li class="my-1 list-none tree-node-dir" data-name="${node.name}" data-time="${node.timestamp}">
+    return (
+      <li class="my-1 list-none tree-node-dir" data-name={node.name} data-time={node.timestamp}>
         <details open class="group">
           <summary class="flex items-center gap-2 font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer hover:text-[var(--primary)] transition p-1.5 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 list-none select-none">
             <span class="text-[10px] transition-transform group-open:rotate-90 text-zinc-400 group-hover:text-[var(--primary)]">▶</span>
-            <span class="text-sm font-semibold">📁 ${node.name}</span>
+            <span class="text-sm font-semibold">📁 {node.name}</span>
           </summary>
           <ul class="file-tree-sub pl-4 border-l border-dashed border-zinc-200 dark:border-zinc-800 mt-1 space-y-1 ml-2 p-0">
-            ${node.children?.map(child => renderNode(child, showSize, showTrack)).join('')}
+            {node.children?.map(child => <Astro.self render-node={child} showSize={showSize} showTrack={showTrack} />)}
           </ul>
         </details>
       </li>
-    `;
+    );
   } else {
-    const sizeTag = showSize ? `<span class="bg-zinc-200/60 dark:bg-zinc-800/60 px-1.5 py-0.5 rounded text-zinc-500 dark:text-zinc-400 font-mono">${node.sizeString}</span>` : '';
-    const trackTag = showTrack ? `<span>更新: ${node.timeString}</span>` : '';
-
-    return `
+    return (
       <li class="tree-node-file flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition group gap-2 list-none" 
-          data-name="${node.name}" data-size="${node.bytes}" data-time="${node.timestamp}">
+          data-name={node.name} data-size={node.bytes} data-time={node.timestamp}>
         <div class="flex items-center gap-2 min-w-0">
-          <span class="text-zinc-600 dark:text-zinc-400 text-sm truncate">📄 ${node.name}</span>
+          <span class="text-zinc-600 dark:text-zinc-400 text-sm truncate">📄 {node.name}</span>
         </div>
         <div class="flex items-center justify-between sm:justify-end gap-4 text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
-          ${sizeTag}
-          ${trackTag}
-          <a href="${node.downloadPath}" download="${node.name}" class="sm:opacity-0 group-hover:opacity-100 transition text-[11px] bg-[var(--primary)] text-white px-2.5 py-0.5 rounded shadow-sm font-medium hover:brightness-110">下载</a>
+          {showSize && <span class="bg-zinc-200/60 dark:bg-zinc-800/60 px-1.5 py-0.5 rounded text-zinc-500 dark:text-zinc-400 font-mono">{node.sizeString}</span>}
+          {showTrack && <span>更新: {node.timeString}</span>}
+          <a href={node.downloadPath} download={node.name} class="sm:opacity-0 group-hover:opacity-100 transition text-[11px] bg-[var(--primary)] text-white px-2.5 py-0.5 rounded shadow-sm font-medium hover:brightness-110">下载</a>
         </div>
       </li>
-    `;
+    );
   }
-}
----
+})()}
 
 <style is:inline>
   summary::-webkit-details-marker { display: none !important; }
