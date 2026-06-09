@@ -96,31 +96,31 @@ function buildTreeHtml(nodes: FileNode[]): string {
   for (const node of nodes) {
     if (node.type === 'directory') {
       html += `
-        \x3Cli class="my-1 list-none tree-node-dir" data-name="${node.name}" data-time="${node.timestamp}"\x3E
-          \x3Cdetails open class="group"\x3E
-            \x3Csummary class="flex items-center gap-2 font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer hover:text-[var(--primary)] transition p-1.5 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 list-none select-none"\x3E
-              \x3Cspan class="text-[10px] transition-transform group-open:rotate-90 text-zinc-400 group-hover:text-[var(--primary)]"\x3E▶\x3C/span\x3E
-              \x3Cspan class="text-sm font-semibold"\x3E📁 ${node.name}\x3C/span\x3E
-            \x3C/summary\x3E
-            \x3Cul class="file-tree-sub pl-4 border-l border-dashed border-zinc-200 dark:border-zinc-800 mt-1 space-y-1 ml-2 p-0"\x3E
+        <li class="my-1 list-none tree-node-dir" data-name="${node.name}" data-time="${node.timestamp}">
+          <details open class="group">
+            <summary class="flex items-center gap-2 font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer hover:text-[var(--primary)] transition p-1.5 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 list-none select-none">
+              <span class="text-[10px] transition-transform group-open:rotate-90 text-zinc-400 group-hover:text-[var(--primary)]">▶</span>
+              <span class="text-sm font-semibold">📁 ${node.name}</span>
+            </summary>
+            <ul class="file-tree-sub pl-4 border-l border-dashed border-zinc-200 dark:border-zinc-800 mt-1 space-y-1 ml-2 p-0">
               ${buildTreeHtml(node.children || [])}
-            \x3C/ul\x3E
-          \x3C/details\x3E
-        \x3C/li\x3E
+            </ul>
+          </details>
+        </li>
       `;
     } else {
       html += `
-        \x3Cli class="tree-node-file flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition group gap-2 list-none" 
-            data-name="${node.name}" data-size="${node.bytes}" data-time="${node.timestamp}"\x3E
-          \x3Cdiv class="flex items-center gap-2 min-w-0"\x3E
-            \x3Cspan class="text-zinc-600 dark:text-zinc-400 text-sm truncate"\x3E📄 ${node.name}\x3C/span\x3E
-          \x3Cdiv\x3E
-          \x3Cdiv class="flex items-center justify-between sm:justify-end gap-4 text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0"\x3E
-            ${showSize ? `\x3Cspan class="bg-zinc-200/60 dark:bg-zinc-800/60 px-1.5 py-0.5 rounded text-zinc-500 dark:text-zinc-400 font-mono"\x3E${node.sizeString}\x3C/span\x3E` : ''}
-            ${showTrack ? `\x3Cspan\x3E更新: ${node.timeString}\x3C/span\x3E` : ''}
-            \x3Ca href="${node.downloadPath}" download="${node.name}" class="sm:opacity-0 group-hover:opacity-100 transition text-[11px] bg-[var(--primary)] text-white px-2.5 py-0.5 rounded shadow-sm font-medium hover:brightness-110"\x3E下载\x3C/a\x3E
-          \x3C/div\x3E
-        \x3C/li\x3E
+        <li class="tree-node-file flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition group gap-2 list-none" 
+            data-name="${node.name}" data-size="${node.bytes}" data-time="${node.timestamp}">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-zinc-600 dark:text-zinc-400 text-sm truncate">📄 ${node.name}</span>
+          </div>
+          <div class="flex items-center justify-between sm:justify-end gap-4 text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
+            ${showSize ? `<span class="bg-zinc-200/60 dark:bg-zinc-800/60 px-1.5 py-0.5 rounded text-zinc-500 dark:text-zinc-400 font-mono">${node.sizeString}</span>` : ''}
+            ${showTrack ? `<span>更新: ${node.timeString}</span>` : ''}
+            <a href="${node.downloadPath}" download="${node.name}" class="sm:opacity-0 group-hover:opacity-100 transition text-[11px] bg-[var(--primary)] text-white px-2.5 py-0.5 rounded shadow-sm font-medium hover:brightness-110">下载</a>
+          </div>
+        </li>
       `;
     }
   }
@@ -128,37 +128,35 @@ function buildTreeHtml(nodes: FileNode[]): string {
 }
 
 const fileTree = readDirectory(TARGET_DIR);
-const treeHtml = buildTreeHtml(fileTree);
+const hasFiles = fileTree.length > 0;
+
+let finalBodyHtml = '';
+if (!hasFiles) {
+  finalBodyHtml = `<p class="text-zinc-400 text-center py-6 text-sm">暂无可用下载文件，请放入 public/${dir}/ 目录</p>`;
+} else {
+  finalBodyHtml = `<ul class="file-tree-root space-y-1 m-0 p-0">${buildTreeHtml(fileTree)}</ul>`;
+}
 ---
 
 <div class="download-manager-wrapper w-full mt-6">
-  {fileTree.length > 0 && (
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-4 px-1">
-      <div class="text-sm font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-        📂 资源下载列表 ({dir})
-      </div>
-      <div class="flex items-center gap-2 text-xs text-zinc-500">
-        <span>排序：</span>
-        <select class="sort-selector bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 outline-none text-zinc-700 dark:text-zinc-300 cursor-pointer">
-          <option value="name-asc">名字 (A-Z)</option>
-          <option value="name-desc">名字 (Z-A)</option>
-          {showSize && <option value="size-desc">大小 (从大到小)</option>}
-          {showSize && <option value="size-asc">大小 (从小到大)</option>}
-          {showTrack && <option value="time-desc">时间 (最新优先)</option>}
-          {showTrack && <option value="time-asc">时间 (最早优先)</option>}
-        </select>
-      </div>
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-4 px-1" style={hasFiles ? "" : "display: none;"}>
+    <div class="text-sm font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+      📂 资源下载列表 ({dir})
     </div>
-  )}
+    <div class="flex items-center gap-2 text-xs text-zinc-500">
+      <span>排序：</span>
+      <select class="sort-selector bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 outline-none text-zinc-700 dark:text-zinc-300 cursor-pointer">
+        <option value="name-asc">名字 (A-Z)</option>
+        <option value="name-desc">名字 (Z-A)</option>
+        <option value="size-desc" style={showSize ? "" : "display: none;"}>大小 (从大到小)</option>
+        <option value="size-asc" style={showSize ? "" : "display: none;"}>大小 (从小到大)</option>
+        <option value="time-desc" style={showTrack ? "" : "display: none;"}>时间 (最新优先)</option>
+        <option value="time-asc" style={showTrack ? "" : "display: none;"}>时间 (最早优先)</option>
+      </select>
+    </div>
+  </div>
 
-  <div class="bg-zinc-50/50 dark:bg-zinc-950/30 border border-black/5 dark:border-white/5 rounded-xl p-4 shadow-inner">
-    {fileTree.length === 0 && (
-      <p class="text-zinc-400 text-center py-6 text-sm">暂无可用下载文件，请放入 public/{dir}/ 目录</p>
-    )}
-    
-    {fileTree.length > 0 && (
-      <ul class="file-tree-root space-y-1 m-0 p-0" set:html={treeHtml}></ul>
-    )}
+  <div class="bg-zinc-50/50 dark:bg-zinc-950/30 border border-black/5 dark:border-white/5 rounded-xl p-4 shadow-inner" set:html={finalBodyHtml}>
   </div>
 </div>
 
@@ -172,18 +170,18 @@ const treeHtml = buildTreeHtml(fileTree);
     const wrappers = document.querySelectorAll('.download-manager-wrapper');
     
     wrappers.forEach(wrapper => {
-      const selector = wrapper.querySelector('.sort-selector');
+      const selector = wrapper.querySelector('.sort-selector') as HTMLSelectElement | null;
       if (!selector) return;
 
       selector.addEventListener('change', (e) => {
-        const target = e.target;
+        const target = e.target as HTMLSelectElement | null;
         if (!target) return;
         
         const value = target.value;
         const [field, order] = value.split('-');
 
-        const sortList = (ul) => {
-          const items = Array.from(ul.children);
+        const sortList = (ul: HTMLUListElement) => {
+          const items = Array.from(ul.children) as HTMLElement[];
           
           items.sort((a, b) => {
             const isDirA = a.classList.contains('tree-node-dir');
@@ -210,10 +208,10 @@ const treeHtml = buildTreeHtml(fileTree);
           });
 
           items.forEach(item => ul.appendChild(item));
-          ul.querySelectorAll('.file-tree-sub').forEach(subList => sortList(subList)); 
+          ul.querySelectorAll('.file-tree-sub').forEach(subList => sortList(subList as HTMLUListElement)); 
         };
 
-        const rootUl = wrapper.querySelector('.file-tree-root');
+        const rootUl = wrapper.querySelector('.file-tree-root') as HTMLUListElement | null;
         if (rootUl) sortList(rootUl);
       });
     });
