@@ -168,8 +168,8 @@ json格式如:
 
 ---
 
->你可以在你的博客页脚/头部配置文件中添加此代码
-
+>你可以在你的博客页脚/头部配置文件中添加此代码引用本博客站娘
+``<script is:inline src="https://bakablog.cn.mt/live2d_widget_v3/autoload.js"></script>
 
 >在本Astro博客的/src/components/Footer.Astro中
 ```html
@@ -190,80 +190,9 @@ const currentYear = new Date().getFullYear();
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://astro.build">Astro</a> &
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://github.com/saicaca/fuwari">Fuwari</a>
     </div>  
+    <script is:inline src="/live2d_widget_v3/autoload.js"></script>
 </div>
-<script is:inline>
-  function initLive2DWidget() {
-    if (window.Live2DWidgetInitialized) return;
 
-    const LocalPatch = '/live2d_widget_v3';
-    const config = {
-      path: {
-        homePath: '/',
-        modelPath: LocalPatch + "/Resources/", 
-        cssPath: LocalPatch + "/waifu.css",
-        tipsJsonPath: LocalPatch + "/waifu-tips.json",
-        tipsJsPath: LocalPatch + "/waifu-tips.js",
-        live2dCorePath: LocalPatch + "/Core/live2dcubismcore.js",
-        live2dSdkPath: LocalPatch + "/live2d-sdk.js"
-      },
-      tools: ["hitokoto", "asteroids", "express", "switch-model", "switch-texture", "photo", "info", "quit"],
-      drag: {
-        enable: true,
-        direction: ["x", "y"]
-      },
-      switchType: "order"
-    }
-
-    window.config = config;
-
-    if (screen.width >= 768) {
-      Promise.all([
-        loadExternalResource(config.path.cssPath, "css"),
-        loadExternalResource(config.path.live2dCorePath, "js"),
-        loadExternalResource(config.path.live2dSdkPath, "js"),
-        loadExternalResource(config.path.tipsJsPath, "js")
-      ]).then(() => {
-        initWidget({
-          homePath: config.path.homePath,
-          waifuPath: config.path.tipsJsonPath,
-          cdnPath: config.path.modelPath,
-          tools: config.tools,
-          dragEnable: config.drag.enable,
-          dragDirection: config.drag.direction,
-          switchType: config.switchType
-        });
-        window.Live2DWidgetInitialized = true;
-      }).catch(err => {
-        console.error(err);
-      });
-    }
-  }
-
-  function loadExternalResource(url, type) {
-    return new Promise((resolve, reject) => {
-      if (type === "css" && document.querySelector(`link[href="${url}"]`)) return resolve(url);
-      if (type === "js" && document.querySelector(`script[src="${url}"]`)) return resolve(url);
-
-      let tag;
-      if (type === "css") {
-        tag = document.createElement("link");
-        tag.rel = "stylesheet";
-        tag.href = url;
-      } else if (type === "js") {
-        tag = document.createElement("script");
-        tag.src = url;
-      }
-      if (tag) {
-        tag.onload = () => resolve(url);
-        tag.onerror = () => reject(url);
-        document.head.appendChild(tag);
-      }
-    });
-  }
-
-  initLive2DWidget();
-  document.addEventListener("astro:page-load", initLive2DWidget);
-</script>
 ```
 *我也不是这方面的高玩,可能有些错误,欢迎指正*
 
