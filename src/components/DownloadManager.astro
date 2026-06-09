@@ -3,9 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 interface Props {
-  dir?: string;            // 默认是 /public/downloads,你手动配置就变成public了
-  showSize?: boolean;      // 是否显示文件大小，默认 true
-  showTrack?: boolean;     // 是否显示更新时间，默认 true
+  dir?: string;        // 默认是 /public/downloads,你手动配置就变成public了
+  showSize?: boolean;   // 是否显示文件大小，默认 true
+  showTrack?: boolean;    // 是否显示更新时间，默认 true
 }
 
 const { 
@@ -26,7 +26,6 @@ interface FileNode {
   children?: FileNode[];
 }
 
-//黑客书写。
 const TARGET_DIR = path.join(process.cwd(), 'public', dir);
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -115,7 +114,7 @@ const fileTree = readDirectory(TARGET_DIR);
 
   <div class="bg-zinc-50/50 dark:bg-zinc-950/30 border border-black/5 dark:border-white/5 rounded-xl p-4 shadow-inner">
     {fileTree.length === 0 ? (
-      <p class="text-zinc-400 text-center py-6 text-sm">暂无可用下载文件， public/{dir}/ 里没有东西! ╥﹏╥</p>
+      <p class="text-zinc-400 text-center py-6 text-sm">暂无可用下载文件，/public/{dir}/ 里没有东西...</p>
     ) : (
       <ul class="file-tree-root space-y-1 m-0 p-0">
         {fileTree.map(node => <Fragment set:html={renderNode(node, showSize, showTrack)} />)}
@@ -141,6 +140,9 @@ function renderNode(node: FileNode, showSize: boolean, showTrack: boolean): stri
       </li>
     `;
   } else {
+    const sizeTag = showSize ? `<span class="bg-zinc-200/60 dark:bg-zinc-800/60 px-1.5 py-0.5 rounded text-zinc-500 dark:text-zinc-400 font-mono">${node.sizeString}</span>` : '';
+    const trackTag = showTrack ? `<span>更新: ${node.timeString}</span>` : '';
+
     return `
       <li class="tree-node-file flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition group gap-2 list-none" 
           data-name="${node.name}" data-size="${node.bytes}" data-time="${node.timestamp}">
@@ -148,8 +150,8 @@ function renderNode(node: FileNode, showSize: boolean, showTrack: boolean): stri
           <span class="text-zinc-600 dark:text-zinc-400 text-sm truncate">📄 ${node.name}</span>
         </div>
         <div class="flex items-center justify-between sm:justify-end gap-4 text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
-          ${showSize ? `<span class="bg-zinc-200/60 dark:bg-zinc-800/60 px-1.5 py-0.5 rounded text-zinc-500 dark:text-zinc-400 font-mono">${node.sizeString}</span>` : ''}
-          ${showTrack ? `<span>更新: ${node.timeString}</span>` : ''}
+          ${sizeTag}
+          ${trackTag}
           <a href="${node.downloadPath}" download="${node.name}" class="sm:opacity-0 group-hover:opacity-100 transition text-[11px] bg-[var(--primary)] text-white px-2.5 py-0.5 rounded shadow-sm font-medium hover:brightness-110">下载</a>
         </div>
       </li>
