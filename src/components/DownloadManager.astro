@@ -3,9 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 interface Props {
-  dir?: string;       
-  showSize?: boolean;      // 是否显示文件大小，默认 true
-  showTrack?: boolean;     // 是否显示更新时间，默认 true
+  dir?: string;            
+  showSize?: boolean;      
+  showTrack?: boolean;     
 }
 
 const { 
@@ -89,7 +89,46 @@ function readDirectory(dirPath: string, relativePath = ''): FileNode[] {
   });
 }
 
+function buildTreeHtml(nodes: FileNode[]): string {
+  if (!nodes || nodes.length === 0) return '';
+  
+  let html = '';
+  for (const node of nodes) {
+    if (node.type === 'directory') {
+      html += `
+        <li class="my-1 list-none tree-node-dir" data-name="${node.name}" data-time="${node.timestamp}">
+          <details open class="group">
+            <summary class="flex items-center gap-2 font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer hover:text-[var(--primary)] transition p-1.5 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 list-none select-none">
+              <span class="text-[10px] transition-transform group-open:rotate-90 text-zinc-400 group-hover:text-[var(--primary)]">▶</span>
+              <span class="text-sm font-semibold">📁 ${node.name}</span>
+            </summary>
+            <ul class="file-tree-sub pl-4 border-l border-dashed border-zinc-200 dark:border-zinc-800 mt-1 space-y-1 ml-2 p-0">
+              ${buildTreeHtml(node.children || [])}
+            </ul>
+          </details>
+        </li>
+      `;
+    } else {
+      html += `
+        <li class="tree-node-file flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition group gap-2 list-none" 
+            data-name="${node.name}" data-size="${node.bytes}" data-time="${node.timestamp}">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-zinc-600 dark:text-zinc-400 text-sm truncate">📄 ${node.name}</span>
+          </div>
+          <div class="flex items-center justify-between sm:justify-end gap-4 text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
+            ${showSize ? `<span class="bg-zinc-200/60 dark:bg-zinc-800/60 px-1.5 py-0.5 rounded text-zinc-500 dark:text-zinc-400 font-mono">${node.sizeString}</span>` : ''}
+            ${showTrack ? `<span>更新: ${node.timeString}</span>` : ''}
+            <a href="${node.downloadPath}" download="${node.name}" class="sm:opacity-0 group-hover:opacity-100 transition text-[11px] bg-[var(--primary)] text-white px-2.5 py-0.5 rounded shadow-sm font-medium hover:brightness-110">下载</a>
+          </div>
+        </li>
+      `;
+    }
+  }
+  return html;
+}
+
 const fileTree = readDirectory(TARGET_DIR);
+const treeHtml = buildTreeHtml(fileTree);
 ---
 
 <div class="download-manager-wrapper w-full mt-6">
@@ -116,44 +155,7 @@ const fileTree = readDirectory(TARGET_DIR);
     {fileTree.length === 0 ? (
       <p class="text-zinc-400 text-center py-6 text-sm">暂无文件...</p>
     ) : (
-      <ul class="file-tree-root space-y-1 m-0 p-0">
-        {(() => {
-          const renderTree = (nodes: FileNode[]): any => {
-            return nodes.map(node => {
-              if (node.type === 'directory') {
-                return (
-                  <li class="my-1 list-none tree-node-dir" data-name={node.name} data-time={node.timestamp}>
-                    <details open class="group">
-                      <summary class="flex items-center gap-2 font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer hover:text-[var(--primary)] transition p-1.5 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 list-none select-none">
-                        <span class="text-[10px] transition-transform group-open:rotate-90 text-zinc-400 group-hover:text-[var(--primary)]">▶</span>
-                        <span class="text-sm font-semibold">📁 {node.name}</span>
-                      </summary>
-                      <ul class="file-tree-sub pl-4 border-l border-dashed border-zinc-200 dark:border-zinc-800 mt-1 space-y-1 ml-2 p-0">
-                        {node.children && renderTree(node.children)}
-                      </ul>
-                    </details>
-                  </li>
-                );
-              } else {
-                return (
-                  <li class="tree-node-file flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition group gap-2 list-none" 
-                      data-name={node.name} data-size={node.bytes} data-time={node.timestamp}>
-                    <div class="flex items-center gap-2 min-w-0">
-                      <span class="text-zinc-600 dark:text-zinc-400 text-sm truncate">📄 {node.name}</span>
-                    </div>
-                    <div class="flex items-center justify-between sm:justify-end gap-4 text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
-                      {showSize && <span class="bg-zinc-200/60 dark:bg-zinc-800/60 px-1.5 py-0.5 rounded text-zinc-500 dark:text-zinc-400 font-mono">{node.sizeString}</span>}
-                      {showTrack && <span>更新: {node.timeString}</span>}
-                      <a href={node.downloadPath} download={node.name} class="sm:opacity-0 group-hover:opacity-100 transition text-[11px] bg-[var(--primary)] text-white px-2.5 py-0.5 rounded shadow-sm font-medium hover:brightness-110">下载</a>
-                    </div>
-                  </li>
-                );
-              }
-            });
-          };
-          return renderTree(fileTree);
-        })()}
-      </ul>
+      <ul class="file-tree-root space-y-1 m-0 p-0" set:html={treeHtml} />
     )}
   </div>
 </div>
