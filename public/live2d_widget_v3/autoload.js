@@ -1,62 +1,26 @@
-function initLive2DWidget() {
-  if (window.Live2DWidgetInitialized) return;
+const LocalPatch = '/live2d_widget_v3';
+let live2dInitialized = false;
 
-  // 基础目录路径
-  const LocalPatch = '/live2d_widget_v3';
+function cleanupLive2DWidget() {
+  if (window.Live2DWidget) {
+    try {
+      window.Live2DWidget.destroy?.();
+      window.Live2DWidget = null;
+    } catch (e) {
+      console.debug("Live2D cleanup error:", e);
+    }
+  }
   
-  // 看板娘参数配置文件
-  const config = {
-    path: {
-      homePath: '/',                                     // 网站主页路径
-      modelPath: LocalPatch + "/Resources/",             // 模型与 model_list.json 所在的父级目录
-      cssPath: LocalPatch + "/waifu.css",                 // 看板娘画布与控制面板 CSS 样式表
-      tipsJsonPath: LocalPatch + "/waifu-tips.json",     // 文本提示语 JSON
-      tipsJsPath: LocalPatch + "/waifu-tips.js",         // 提示语控制与交互核心逻辑 JS
-      live2dCorePath: LocalPatch + "/Core/live2dcubismcore.js", // Live2D 官方 Cubism 核心解析库
-      live2dSdkPath: LocalPatch + "/live2d-sdk.js"       // 第三方封装的 SDK 适配器
-    },
-    //tools: ["hitokoto", "asteroids", "express", "switch-model", "switch-texture", "photo", "info", "quit"],
-    tools: ["hitokoto", "asteroids", "express", "switch-model", "switch-texture", "photo", "info", "quit"],
-    // 允许鼠标自由拖拽及拖拽方向
-    drag: {
-      enable: true,
-      direction: ["x", "y"]
-    },
-    // 多个模型间的切换模式 (order: 顺序切换，random: 随机切换)
-    switchType: "order"
-  }
-
-  window.config = config;
-
-  if (screen.width >= 768) {
-    Promise.all([
-      loadExternalResource(config.path.cssPath, "css"),
-      loadExternalResource(config.path.live2dCorePath, "js"),
-      loadExternalResource(config.path.live2dSdkPath, "js"),
-      loadExternalResource(config.path.tipsJsPath, "js")
-    ]).then(() => {
-      
-      initWidget({
-        homePath: config.path.homePath,
-        waifuPath: config.path.tipsJsonPath,
-        cdnPath: config.path.modelPath,
-        tools: config.tools,
-        dragEnable: config.drag.enable,
-        dragDirection: config.drag.direction,
-        switchType: config.switchType
-      });
-      window.Live2DWidgetInitialized = true;
-    }).catch(err => {
-      console.error("加载失败：", err);
-    });
-  }
+  const waifuElement = document.getElementById('waifu');
+  const waifuToggle = document.getElementById('waifu-toggle');
+  if (waifuElement) waifuElement.remove();
+  if (waifuToggle) waifuToggle.remove();
+  
+  live2dInitialized = false;
 }
 
 function loadExternalResource(url, type) {
   return new Promise((resolve, reject) => {
-    if (type === "css" && document.querySelector(`link[href="${url}"]`)) return resolve(url);
-    if (type === "js" && document.querySelector(`script[src="${url}"]`)) return resolve(url);
-
     let tag;
     if (type === "css") {
       tag = document.createElement("link");
@@ -70,12 +34,72 @@ function loadExternalResource(url, type) {
     if (tag) {
       tag.onload = () => resolve(url);
       tag.onerror = () => reject(url);
-   
       document.head.appendChild(tag);
     }
   });
 }
 
+async function initLive2DWidget() {
+  if (screen.width < 768 || live2dInitialized) return;
+
+  const config = {
+    path: {
+      homePath: '/',
+      modelPath: LocalPatch + "/Resources/",
+      cssPath: LocalPatch + "/waifu.css",
+      tipsJsonPath: LocalPatch + "/waifu-tips.json",
+      tipsJsPath: LocalPatch + "/waifu-tips.js",
+      live2dCorePath: LocalPatch + "/Core/live2dcubismcore.js",
+      live2dSdkPath: LocalPatch + "/live2d-sdk.js"
+    },
+    tools: ["hitokoto", "asteroids", "express", "switch-model", "switch-texture", "photo", "info", "quit"],
+    drag: { enable: true, direction: ["x", "y"] },
+    switchType: "order"
+  };
+
+  window.config = config;
+
+  try {
+    await Promise.all([
+      loadExternalResource(config.path.cssPath, "css"),
+      loadExternalResource(config.path.live2dCorePath, "js"),
+      loadExternalResource(config.path.live2dSdkPath, "js"),
+      loadExternalResource(config.path.tipsJsPath, "js")
+    ]);
+
+    if (typeof initWidget === 'function') {
+      initWidget({
+        homePath: config.path.homePath,
+        waifuPath: config.path.tipsJsonPath,
+        cdnPath: config.path.modelPath,
+        tools: config.tools,
+        dragEnable: config.drag.enable,
+        dragDirection: config.drag.direction,
+        switchType: config.switchType
+      });
+      live2dInitialized = true;
+    }
+  } catch (err) {
+    console.error("Live2D加载失败：", err);
+  }
+}
+
 initLive2DWidget();
 
-document.addEventListener("astro:page-load", initLive2DWidget);
+// Swup 页面转换事件
+if (window.swup) {
+  window.swup.on('contentReplaced', () => {
+    cleanupLive2DWidget();
+    setTimeout(() => {
+      initLive2DWidget();
+    }, 50);
+  });
+}
+
+// 备选：Astro 页面加载事件
+document.addEventListener("astro:page-load", () => {
+  cleanupLive2DWidget();
+  setTimeout(() => {
+    initLive2DWidget();
+  }, 50);
+});
