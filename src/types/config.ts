@@ -104,7 +104,8 @@ export type ExpressiveCodeConfig = {
 export enum LinkPreset {
   Home = 0,
   Archive = 1,
-  Pages = 2,
-  Guides = 3,
-  About = 4,
+  Downloads = 2,
+  Pages = 3,
+  Guides = 4,
+  About = 5,
 }

@@ -35,6 +35,7 @@ enum I18nKey {
 	
 	pages = 'pages',
 	guides = 'guides',
+	downloads = 'downloads',
 }
 
 export default I18nKey;

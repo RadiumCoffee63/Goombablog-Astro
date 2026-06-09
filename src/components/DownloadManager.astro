@@ -1,0 +1,217 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+
+interface Props {
+  dir?: string;            // 默认是 /public/downloads,你手动配置就变成public了
+  showSize?: boolean;      // 是否显示文件大小，默认 true
+  showTrack?: boolean;     // 是否显示更新时间，默认 true
+}
+
+const { 
+  dir = 'downloads', 
+  showSize = true, 
+  showTrack = true 
+} = Astro.props;
+
+interface FileNode {
+  name: string;
+  type: 'file' | 'directory';
+  relativePath: string;
+  downloadPath: string;  
+  bytes: number;         
+  timeString: string;    
+  timestamp: number;     
+  sizeString: string;    
+  children?: FileNode[];
+}
+
+//黑客书写。
+const TARGET_DIR = path.join(process.cwd(), 'public', dir);
+
+function formatBytes(bytes: number, decimals = 2) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function readDirectory(dirPath: string, relativePath = ''): FileNode[] {
+  if (!fs.existsSync(dirPath)) return [];
+
+  const files = fs.readdirSync(dirPath);
+  const nodes: FileNode[] = [];
+
+  for (const file of files) {
+    if (file.startsWith('.')) continue;
+
+    const fullPath = path.join(dirPath, file);
+    const stat = fs.statSync(fullPath);
+    const currentRelativePath = path.join(relativePath, file).replace(/\\/g, '/');
+    const currentDownloadPath = `/${dir}/${currentRelativePath}`;
+
+    if (stat.isDirectory()) {
+      nodes.push({
+        name: file,
+        type: 'directory',
+        relativePath: currentRelativePath,
+        downloadPath: currentDownloadPath,
+        bytes: 0,
+        timestamp: stat.mtime.getTime(),
+        timeString: formatDate(stat.mtime),
+        sizeString: '',
+        children: readDirectory(fullPath, currentRelativePath)
+      });
+    } else {
+      nodes.push({
+        name: file,
+        type: 'file',
+        relativePath: currentRelativePath,
+        downloadPath: currentDownloadPath,
+        bytes: stat.size,
+        timestamp: stat.mtime.getTime(),
+        timeString: formatDate(stat.mtime),
+        sizeString: formatBytes(stat.size)
+      });
+    }
+  }
+
+  return nodes.sort((a, b) => {
+    if (a.type === b.type) return a.name.localeCompare(b.name);
+    return a.type === 'directory' ? -1 : 1;
+  });
+}
+
+const fileTree = readDirectory(TARGET_DIR);
+---
+
+<div class="download-manager-wrapper w-full mt-6">
+  {fileTree.length > 0 && (
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-4 px-1">
+      <div class="text-sm font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+        📂 资源下载列表 ({dir})
+      </div>
+      <div class="flex items-center gap-2 text-xs text-zinc-500">
+        <span>排序：</span>
+        <select class="sort-selector bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 outline-none text-zinc-700 dark:text-zinc-300 cursor-pointer">
+          <option value="name-asc">名字 (A-Z)</option>
+          <option value="name-desc">名字 (Z-A)</option>
+          {showSize && <option value="size-desc">大小 (从大到小)</option>}
+          {showSize && <option value="size-asc">大小 (从小到大)</option>}
+          {showTrack && <option value="time-desc">时间 (最新优先)</option>}
+          {showTrack && <option value="time-asc">时间 (最早优先)</option>}
+        </select>
+      </div>
+    </div>
+  )}
+
+  <div class="bg-zinc-50/50 dark:bg-zinc-950/30 border border-black/5 dark:border-white/5 rounded-xl p-4 shadow-inner">
+    {fileTree.length === 0 ? (
+      <p class="text-zinc-400 text-center py-6 text-sm">暂无可用下载文件， public/{dir}/ 里没有东西! ╥﹏╥</p>
+    ) : (
+      <ul class="file-tree-root space-y-1 m-0 p-0">
+        {fileTree.map(node => <Fragment set:html={renderNode(node, showSize, showTrack)} />)}
+      </ul>
+    )}
+  </div>
+</div>
+
+---
+function renderNode(node: FileNode, showSize: boolean, showTrack: boolean): string {
+  if (node.type === 'directory') {
+    return `
+      <li class="my-1 list-none tree-node-dir" data-name="${node.name}" data-time="${node.timestamp}">
+        <details open class="group">
+          <summary class="flex items-center gap-2 font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer hover:text-[var(--primary)] transition p-1.5 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 list-none select-none">
+            <span class="text-[10px] transition-transform group-open:rotate-90 text-zinc-400 group-hover:text-[var(--primary)]">▶</span>
+            <span class="text-sm font-semibold">📁 ${node.name}</span>
+          </summary>
+          <ul class="file-tree-sub pl-4 border-l border-dashed border-zinc-200 dark:border-zinc-800 mt-1 space-y-1 ml-2 p-0">
+            ${node.children?.map(child => renderNode(child, showSize, showTrack)).join('')}
+          </ul>
+        </details>
+      </li>
+    `;
+  } else {
+    return `
+      <li class="tree-node-file flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition group gap-2 list-none" 
+          data-name="${node.name}" data-size="${node.bytes}" data-time="${node.timestamp}">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-zinc-600 dark:text-zinc-400 text-sm truncate">📄 ${node.name}</span>
+        </div>
+        <div class="flex items-center justify-between sm:justify-end gap-4 text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
+          ${showSize ? `<span class="bg-zinc-200/60 dark:bg-zinc-800/60 px-1.5 py-0.5 rounded text-zinc-500 dark:text-zinc-400 font-mono">${node.sizeString}</span>` : ''}
+          ${showTrack ? `<span>更新: ${node.timeString}</span>` : ''}
+          <a href="${node.downloadPath}" download="${node.name}" class="sm:opacity-0 group-hover:opacity-100 transition text-[11px] bg-[var(--primary)] text-white px-2.5 py-0.5 rounded shadow-sm font-medium hover:brightness-110">下载</a>
+        </div>
+      </li>
+    `;
+  }
+}
+---
+
+<style is:inline>
+  summary::-webkit-details-marker { display: none !important; }
+  summary { display: flex !important; list-style: none !important; }
+</style>
+
+<script>
+  function setupDownloadSort() {
+    const wrappers = document.querySelectorAll('.download-manager-wrapper');
+    
+    wrappers.forEach(wrapper => {
+      const selector = wrapper.querySelector('.sort-selector');
+      if (!selector) return;
+
+      selector.addEventListener('change', (e) => {
+        const value = (e.target as HTMLSelectElement).value;
+        const [field, order] = value.split('-');
+
+        const sortList = (ul: Element) => {
+          const items = Array.from(ul.children);
+          
+          items.sort((a, b) => {
+            const isDirA = a.classList.contains('tree-node-dir');
+            const isDirB = b.classList.contains('tree-node-dir');
+            
+            if (isDirA !== isDirB) return isDirA ? -1 : 1; 
+
+            if (field === 'name') {
+              const nameA = a.getAttribute('data-name') || '';
+              const nameB = b.getAttribute('data-name') || '';
+              return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+            } 
+            if (field === 'size') {
+              const sizeA = parseInt(a.getAttribute('data-size') || '0', 10);
+              const sizeB = parseInt(b.getAttribute('data-size') || '0', 10);
+              return order === 'asc' ? sizeA - sizeB : sizeB - sizeA;
+            }
+            if (field === 'time') {
+              const timeA = parseInt(a.getAttribute('data-time') || '0', 10);
+              const timeB = parseInt(b.getAttribute('data-time') || '0', 10);
+              return order === 'asc' ? timeA - timeB : timeB - timeA;
+            }
+            return 0;
+          });
+
+          items.forEach(item => ul.appendChild(item));
+          ul.querySelectorAll('.file-tree-sub').forEach(subList => sortList(subList)); 
+        };
+
+        const rootUl = wrapper.querySelector('.file-tree-root');
+        if (rootUl) sortList(rootUl);
+      });
+    });
+  }
+
+  setupDownloadSort();
+  document.addEventListener('astro:page-load', setupDownloadSort);
+</script>

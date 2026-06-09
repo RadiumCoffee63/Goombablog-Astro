@@ -43,6 +43,7 @@ export const navBarConfig: NavBarConfig = {
 	links: [
 		LinkPreset.Home,
 		LinkPreset.Archive,
+		LinkPreset.Downloads,
 	    LinkPreset.Pages,
 	    LinkPreset.Guides,
 		LinkPreset.About,
@@ -87,8 +88,9 @@ export const profileConfig: ProfileConfig = {
 	],
 };
 
+//这个好像是开关条款显示的吧
 export const licenseConfig: LicenseConfig = {
-	enable: true,
+	enable: false,
 	name: "CC BY-NC-SA 4.0",
 	url: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
 };

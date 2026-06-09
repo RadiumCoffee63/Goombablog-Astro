@@ -38,4 +38,5 @@ export const en: Translation = {
 	
 	[Key.pages]: "Pages",
 	[Key.guides]: "Guides",
+	[Key.downloads]: "Download Site",
 };

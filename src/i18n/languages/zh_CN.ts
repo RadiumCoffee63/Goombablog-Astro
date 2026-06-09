@@ -39,4 +39,5 @@ export const zh_CN: Translation = {
 
 	[Key.pages]: "页面",
 	[Key.guides]: "指南",
+	[Key.downloads]: "下载站",
 };
