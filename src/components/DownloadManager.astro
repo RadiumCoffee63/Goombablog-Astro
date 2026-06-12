@@ -27,18 +27,14 @@ interface FileNode {
   children?: FileNode[];
 }
 
-// 获取项目根目录的可靠方式
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// 从 src/components 到项目根：../../
 const projectRoot = path.resolve(__dirname, '../..');
-const TARGET_DIR = path.join(projectRoot, 'public', dir);
+const TARGET_DIR = path.join(projectRoot, '', dir);
 
-// 如果以上路径不存在，尝试备选路径 (用于 Astro dist 构建)
-const fallbackTargetDir = path.join(projectRoot, 'dist', dir);
+const fallbackTargetDir = path.join(projectRoot, '', dir);
 const actualTargetDir = fs.existsSync(TARGET_DIR) ? TARGET_DIR : fallbackTargetDir;
 
-// 调试日志（仅在开发构建时）
 if (import.meta.env.DEV) {
   console.log('[DownloadManager]', {
     projectRoot,
@@ -92,7 +88,6 @@ function readDirectory(dirPath: string, relativePath = ''): FileNode[] {
         children: readDirectory(fullPath, currentRelativePath)
       });
     } else {
-      // 对于文件，直接使用文件路径
       const currentDownloadPath = `/${dir}/${currentRelativePath}`;
       nodes.push({
         name: file,
@@ -235,11 +230,9 @@ if (!hasFiles) {
     const wrappers = document.querySelectorAll('.download-manager-wrapper');
     
     wrappers.forEach(wrapper => {
-      // 检查是否已初始化，避免重复绑定
       if (initializedWrappers.has(wrapper)) return;
       initializedWrappers.add(wrapper);
       
-      // 使用事件委托处理下载按钮点击
       wrapper.addEventListener('click', handleDownloadClick);
       
       const selector = wrapper.querySelector('.sort-selector') as HTMLSelectElement | null;
