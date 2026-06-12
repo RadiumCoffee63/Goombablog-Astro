@@ -1,6 +1,7 @@
 ---
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 interface Props {
   dir?: string;            
@@ -26,7 +27,28 @@ interface FileNode {
   children?: FileNode[];
 }
 
-const TARGET_DIR = path.join(process.cwd(), 'public', dir);
+// 获取项目根目录的可靠方式
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// 从 src/components 到项目根：../../
+const projectRoot = path.resolve(__dirname, '../..');
+const TARGET_DIR = path.join(projectRoot, 'public', dir);
+
+// 如果以上路径不存在，尝试备选路径 (用于 Astro dist 构建)
+const fallbackTargetDir = path.join(projectRoot, 'dist', dir);
+const actualTargetDir = fs.existsSync(TARGET_DIR) ? TARGET_DIR : fallbackTargetDir;
+
+// 调试日志（仅在开发构建时）
+if (import.meta.env.DEV) {
+  console.log('[DownloadManager]', {
+    projectRoot,
+    TARGET_DIR,
+    targetDirExists: fs.existsSync(TARGET_DIR),
+    fallbackTargetDir,
+    actualTargetDir,
+    actualDirExists: fs.existsSync(actualTargetDir),
+  });
+}
 
 function formatBytes(bytes: number, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
@@ -55,9 +77,9 @@ function readDirectory(dirPath: string, relativePath = ''): FileNode[] {
     const fullPath = path.join(dirPath, file);
     const stat = fs.statSync(fullPath);
     const currentRelativePath = path.join(relativePath, file).replace(/\\/g, '/');
-    const currentDownloadPath = `/${dir}/${currentRelativePath}`;
 
     if (stat.isDirectory()) {
+      const currentDownloadPath = `/${dir}/${currentRelativePath}`;
       nodes.push({
         name: file,
         type: 'directory',
@@ -70,6 +92,8 @@ function readDirectory(dirPath: string, relativePath = ''): FileNode[] {
         children: readDirectory(fullPath, currentRelativePath)
       });
     } else {
+      // 对于文件，直接使用文件路径
+      const currentDownloadPath = `/${dir}/${currentRelativePath}`;
       nodes.push({
         name: file,
         type: 'file',
@@ -117,8 +141,8 @@ function buildTreeHtml(nodes: FileNode[]): string {
           </div>
           <div class="flex items-center justify-between sm:justify-end gap-4 text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
             ${showSize ? `<span class="bg-zinc-200/60 dark:bg-zinc-800/60 px-1.5 py-0.5 rounded text-zinc-500 dark:text-zinc-400 font-mono">${node.sizeString}</span>` : ''}
-            ${showTrack ? `<span>更新: ${node.timeString}</span>` : ''}
-            <a href="${node.downloadPath}" download="${node.name}" class="sm:opacity-0 group-hover:opacity-100 transition text-[11px] bg-[var(--primary)] text-white px-2.5 py-0.5 rounded shadow-sm font-medium hover:brightness-110">下载</a>
+            ${showTrack ? `<span>更新时间: ${node.timeString}</span>` : ''}
+            <button class="download-btn opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition text-[11px] bg-[var(--primary)] text-white px-2.5 py-0.5 rounded shadow-sm font-medium hover:brightness-110" data-url="${node.downloadPath}" data-filename="${node.name}">下载</button>
           </div>
         </li>
       `;
@@ -127,7 +151,7 @@ function buildTreeHtml(nodes: FileNode[]): string {
   return html;
 }
 
-const fileTree = readDirectory(TARGET_DIR);
+const fileTree = readDirectory(actualTargetDir);
 const hasFiles = fileTree.length > 0;
 
 let finalBodyHtml = '';
@@ -166,10 +190,58 @@ if (!hasFiles) {
 </style>
 
 <script>
+  const initializedWrappers = new Set<HTMLElement>();
+
+  function handleDownloadClick(e: Event) {
+    const target = e.target as HTMLElement;
+    if (!target.classList.contains('download-btn')) return;
+    
+    const btn = target as HTMLButtonElement;
+    const url = btn.getAttribute('data-url');
+    const filename = btn.getAttribute('data-filename');
+    if (!url || !filename) return;
+    //这里感谢黑客Copilot。，
+    (async () => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const contentDisposition = response.headers.get('content-disposition');
+        let downloadName = filename;
+        if (contentDisposition && contentDisposition.includes('filename')) {
+          const matches = contentDisposition.match(/filename\*?=(?:UTF-8'')?([^;]+)/);
+          if (matches && matches[1]) {
+            downloadName = decodeURIComponent(matches[1]);
+          }
+        }
+        
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = downloadName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch (error) {
+        console.error('Download failed:', error);
+        alert('下载失败，可能是后缀的原因吧,我还不知道怎么改');
+      }
+    })();
+  }
+
   function setupDownloadSort() {
     const wrappers = document.querySelectorAll('.download-manager-wrapper');
     
     wrappers.forEach(wrapper => {
+      // 检查是否已初始化，避免重复绑定
+      if (initializedWrappers.has(wrapper)) return;
+      initializedWrappers.add(wrapper);
+      
+      // 使用事件委托处理下载按钮点击
+      wrapper.addEventListener('click', handleDownloadClick);
+      
       const selector = wrapper.querySelector('.sort-selector') as HTMLSelectElement | null;
       if (!selector) return;
 

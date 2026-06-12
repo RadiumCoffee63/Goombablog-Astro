@@ -1,10 +1,11 @@
 ---
 import { getEntry, render } from "astro:content";
 import Markdown from "@components/misc/Markdown.astro";
-import MainGridLayout from "../../../layouts/MainGridLayout.astro";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
 import DownloadManager from "@components/DownloadManager.astro"; 
+import Content from "node_modules/photoswipe/dist/types/slide/content";
 const downloadsPost = await getEntry("spec", "guides");
-const { Content } = await render(downloadsPost);
+//const { Content } = await render(downloadsPost);
 ---
 <MainGridLayout title="下载" description="下载">
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
@@ -14,7 +15,6 @@ const { Content } = await render(downloadsPost);
             </Markdown>
 
             <DownloadManager />
-            
-            </div>
+        </div>
     </div>
 </MainGridLayout>
