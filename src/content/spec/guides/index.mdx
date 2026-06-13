@@ -256,8 +256,11 @@ const currentYear = new Date().getFullYear();
 <mark style="background-color:#FFB6C1;padding:4px 10px;border-radius:6px 6px 6px 6px;color:white;font-weight:bold;">四、此博客的黑客下载管理器</mark><br />
 
 :::important
-构建的时候目录好像会变导致public文件消失,所以应该不写public
->
+在本地运行时会自动读取/public/下的文件,默认是其下的downloads文件夹
+如果构建后则会读取dist根目录下的文件,默认是其下的downloads文件夹
+:::
+
+:::note
 ```jsx
 
 //首先你要引入 
@@ -286,7 +289,6 @@ import DownloadManager from "@components/DownloadManager.astro";
 />
 ```
 
-:::note
 例如: <br />
 <DownloadManager  showSize={true}  showTrack={false} />
 :::
