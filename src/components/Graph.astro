@@ -259,7 +259,7 @@ const { data, id = 'main', showLabel = true } = Astro.props;
 
           if (Math.abs(scale - 1) > 0.015) {
             //乐子触摸缩放速度,-40 到 40 是范围,150 是倍数,都改小会更平缓,因为又慢又sb
-            const deltaY = Math.max(20, Math.min(-20, Math.round((1 - scale) * 150)));
+            const deltaY = Math.max(20, Math.min(20, Math.round((1 - scale) * 125)));
             const wheelEvent = new WheelEvent('wheel', {
               deltaY,
               clientX: (e.touches[0].clientX + e.touches[1].clientX) / 2,
