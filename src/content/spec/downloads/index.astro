@@ -1,9 +1,11 @@
 ---
 import { getEntry, render } from "astro:content";
 import Markdown from "@components/misc/Markdown.astro";
-import MainGridLayout from "../../../layouts/MainGridLayout.astro";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
 import DownloadManager from "@components/DownloadManager.astro"; 
+
 const downloadsPost = await getEntry("spec", "guides");
+
 const { Content } = await render(downloadsPost);
 ---
 <MainGridLayout title="下载" description="下载">
@@ -14,7 +16,6 @@ const { Content } = await render(downloadsPost);
             </Markdown>
 
             <DownloadManager />
-            
-            </div>
+        </div>
     </div>
 </MainGridLayout>

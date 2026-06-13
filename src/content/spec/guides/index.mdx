@@ -10,6 +10,7 @@ draft: false
 
 import Graph from '../../../components/Graph.astro';
 import graphData from '../../../data/Graph/guides_test.json';
+import DownloadManager from "@components/DownloadManager.astro"; 
 
 <mark style="background-color:#FFB6C1;padding:4px 10px;border-radius:6px 6px 6px 6px;color:white;font-weight:bold;">一、使用关系图</mark>
 :::note
@@ -249,6 +250,48 @@ const currentYear = new Date().getFullYear();
 
 >如：<br />
 <mark style="background-color: #39C5BB; padding: 4px 10px; border-radius: 6px 0 0 6px; color: white; font-weight: bold;">左侧文字</mark><mark style="background-color: #FFB6C1; padding: 4px 10px; border-radius: 0 6px 6px 0; color: white; font-size: 0.9em; font-weight: bold;">右侧文字</mark>
+
+---
+
+<mark style="background-color:#FFB6C1;padding:4px 10px;border-radius:6px 6px 6px 6px;color:white;font-weight:bold;">四、此博客的黑客下载管理器</mark><br />
+
+:::important
+在本地运行时会自动读取/public/下的文件,默认是其下的downloads文件夹
+如果构建后则会读取dist根目录下的文件,默认是其下的downloads文件夹
+:::
+
+:::note
+```jsx
+
+//首先你要引入 
+import DownloadManager from "@components/DownloadManager.astro"; 
+
+// 使用默认目录 (public/downloads/) 
+<DownloadManager />
+
+// 使用自定义目录 (public/files/) 
+<DownloadManager dir="files" />
+
+// 使用多层目录 (public/resources/docs/) 
+<DownloadManager dir="resources/docs" />
+
+//文件大小 
+<DownloadManager showSize={false} />
+
+//更新时间 
+<DownloadManager showTrack={false} />
+
+// 黑客组合使用。，
+<DownloadManager 
+  dir="assets/tools"
+  showSize={true}
+  showTrack={false}
+/>
+```
+
+例如: <br />
+<DownloadManager  showSize={true}  showTrack={false} />
+:::
 
 ---
 
