@@ -8,8 +8,8 @@ import type {
 import { LinkPreset } from "./types/config";
 
 export const siteConfig: SiteConfig = {
-	title: "Cirno_qwa's Blog",
-	subtitle: "Baka⑨!",
+	title: "Goomba's blog",
+	subtitle: "Somnia",
 	lang: "zh_CN", // Language code, e.g. 'en', 'zh_CN', 'ja', etc.
 	themeColor: {
 		hue: 215, // Default hue for the theme color, from 0 to 360. e.g. red: 0, teal: 200, cyan: 250, pink: 345
@@ -57,9 +57,9 @@ export const navBarConfig: NavBarConfig = {
 };
 
 export const profileConfig: ProfileConfig = {
-	avatar: "/assets/images/avatar.jpg", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
-	name: "Cirno_qwa",
-	bio: "Baka⑨!",
+	avatar: "/home/radiumcoffee/bakablog-astro/src/assets/images/avatar.jpg", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
+	name: "RadiumCoffee",
+	bio: "Somnia",
 	links: [
 		{
 		/*
@@ -74,16 +74,21 @@ export const profileConfig: ProfileConfig = {
 			icon: "fa6-brands:steam",
 			url: "https://store.steampowered.com",
 		},*/
-		name: "X",
+		name: "Twitter",
 			icon: "fa6-brands:twitter", // Visit https://icones.js.org/ for icon codes
 			// You will need to install the corresponding icon set if it's not already included
 			// `pnpm add @iconify-json/<icon-set-name>`
-			url: "https://twitter.com/Mikaqwa",
+			url: "https://twitter.com/CoffeeRadi31644",
 		},
 		{
 			name: "GitHub",
 			icon: "fa6-brands:github",
-			url: "https://github.com/Cirnoqwa",
+			url: "https://github.com/RadiumCoffee63",
+		},
+		{
+			name: "Steam",
+			icon: "fa6-brands:steam",
+			url: "https://store.steampowered.com",
 		},
 	],
 };

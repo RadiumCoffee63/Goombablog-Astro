@@ -1,4 +1,5 @@
 ---
+import { initParticles } from '../scripts/clickParticles.js';
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
@@ -564,4 +565,45 @@ if (window.swup) {
 } else {
 	document.addEventListener("swup:enable", setup)
 }
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    initParticles();
+  });
+</script>
+<script>
+  (function() {
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#DDA0DD', '#FFD93D'];
+    document.addEventListener('click', function(e) {
+      const numParticles = 20;
+      for (let i = 0; i < numParticles; i++) {
+        const particle = document.createElement('div');
+        const size = Math.random() * 10 + 5;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.cssText = `
+          position: fixed;
+          z-index: 9999;
+          pointer-events: none;
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: 50%;
+          background: ${color};
+          left: ${e.clientX}px;
+          top: ${e.clientY}px;
+          transition: all ${Math.random() * 0.8 + 0.5}s cubic-bezier(0, 0.6, 0.5, 1);
+          opacity: 1;
+        `;
+        document.body.appendChild(particle);
+        requestAnimationFrame(() => {
+          const angle = Math.random() * 2 * Math.PI;
+          const distance = Math.random() * 150 + 50;
+          const dx = Math.cos(angle) * distance;
+          const dy = Math.sin(angle) * distance;
+          particle.style.transform = `translate(${dx}px, ${dy}px) scale(0)`;
+          particle.style.opacity = '0';
+        });
+        setTimeout(() => particle.remove(), 1500);
+      }
+    });
+  })();
 </script>
