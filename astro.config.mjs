@@ -24,13 +24,14 @@ import { remarkExcerpt } from "./src/plugins/remark-excerpt.js";
 import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 import { pluginCustomCopyButton } from "./src/plugins/expressive-code/custom-copy-button.js";
 import mdx from '@astrojs/mdx';
-import cloudflare from "@astrojs/cloudflare";
+
 
 // https://astro.build/config
 export default defineConfig({
 	site: "https://goombablog-astro.pages.dev/",
 	base: "/",
 	trailingSlash: "always",
+	output: 'static',
 
 	integrations: [
 		
@@ -180,5 +181,5 @@ export default defineConfig({
 		},
 	},
 
-	adapter: cloudflare()
+	
 });

@@ -20,9 +20,7 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.6",
-    "@astrojs/cloudflare": "^12.6.13",
     "@astrojs/mdx": "^5.0.6",
-    "@astrojs/node": "^10.1.1",
     "@astrojs/rss": "^4.0.14",
     "@astrojs/sitemap": "^3.6.0",
     "@astrojs/svelte": "7.2.3",
@@ -70,6 +68,7 @@
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
+    "@astrojs/node": "^10.1.1",
     "@astrojs/ts-plugin": "^1.10.6",
     "@biomejs/biome": "2.2.5",
     "@rollup/plugin-yaml": "^4.1.2",
