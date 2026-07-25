@@ -145,6 +145,7 @@ const bannerOffset =
 		<ConfigCarrier></ConfigCarrier>
 		<Snowfall />
 		<slot />
+  </div>
 
 		<!-- increase the page height during page transition to prevent the scrolling animation from jumping -->
 		<div id="page-height-extend" class="hidden h-[300vh]"></div>
@@ -183,6 +184,19 @@ const bannerOffset =
 	.navbar-hidden {
 		@apply opacity-0 -translate-y-16
 	}
+	.aplayer-music-player,
+.aplayer {
+  background: var(--bg-color, rgba(30, 30, 40, 0.85)) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  min-width: 180px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08)) !important;
+  color: var(--text-color, #eee) !important;
+}
+
 }
 </style>
 
@@ -596,5 +610,57 @@ if (window.swup) {
         setTimeout(() => particle.remove(), 1500);
       }
     });
+  })();
+</script>
+<script>
+  (function() {
+    if (window.__bgMusic) return;
+
+    //音乐文件
+    const playlist = [
+      '/music/M.m4a',
+      '/music/F.m4a',
+      '/music/let it be.m4a',
+	  '/music/September.m4a',
+      '/music/payphone.m4a',
+	  '/music/[Gawr Gura]Beyond the sea.m4a',
+      '/music/wl.m4a',
+    ];
+    const VOLUME = 0.5;
+
+    let currentIndex = 0;
+    const audio = new Audio();
+
+    // 先递增索引，再播放下一首
+    function playNext() {
+      if (playlist.length === 0) return;
+      currentIndex = (currentIndex + 1) % playlist.length;
+      audio.src = playlist[currentIndex];
+      audio.volume = VOLUME;
+      audio.play().catch(() => {});
+      // 控制台输出当前播放的歌名（方便调试，可删除）
+      console.log('🎵 正在播放:', playlist[currentIndex]);
+    }
+
+    audio.addEventListener('ended', playNext);
+    window.__bgMusic = audio;
+
+    //等第一次点击再出声
+    audio.muted = true;
+    audio.src = playlist[0];
+    audio.play().catch(() => {});
+    console.log('🎵 准备播放第一首:', playlist[0]);
+
+    function unlockAudio() {
+      audio.muted = false;
+      audio.volume = VOLUME;
+      if (audio.paused) {
+        audio.play().catch(() => {});
+      }
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    }
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
   })();
 </script>

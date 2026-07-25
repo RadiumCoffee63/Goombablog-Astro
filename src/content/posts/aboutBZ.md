@@ -7,6 +7,7 @@ description: "本篇以此纪念AF服务器管理白子（也许是）"
 image: ""
 tags: ["bz"]
 category: "随笔"
+
 ---
 
 # 古拉第一篇博文
