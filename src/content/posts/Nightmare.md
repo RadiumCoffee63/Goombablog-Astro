@@ -18,14 +18,14 @@ category: "随笔"
 >这太突然了，前面真的很平静很日常
 
 <details>
-   <summary><mark style="background-color: lightpink;">[图片]点击展开</mark></summary>
+   <summary><mark style="background-color: #70a1ff;">[图片]点击展开</mark></summary>
         <pre><blockcode>  
            <img src="/Nightmare/139397083_p0..jpg">
         </blockcode></pre>
 </details>
 
 <details>
-   <summary><mark style="background-color: lightpink;">[图片]点击展开</mark></summary>
+   <summary><mark style="background-color: #70a1ff;">[图片]点击展开</mark></summary>
         <pre><blockcode>  
            <img src="/Nightmare/143717345_p0..png">
         </blockcode></pre>
