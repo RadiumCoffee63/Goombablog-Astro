@@ -4,7 +4,7 @@ published: 2026-06-21
 updated: 2026-06-21
 draft: false
 description: "本篇以此纪念AF服务器管理白子（也许是）"
-image: ""
+image: "/Pixiv/Image_1782545295556_105..jpg"
 tags: ["bz"]
 category: "随笔"
 
