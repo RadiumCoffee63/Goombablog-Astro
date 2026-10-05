@@ -1,0 +1,533 @@
+---
+const {
+	radius = 125,
+	theta = 0,
+	phi = 30,
+} = Astro.props;
+---
+
+<div
+	class="coordinate-sphere"
+	data-radius={radius}
+	data-theta={theta}
+	data-phi={phi}
+>
+	<div class="coordinate-controls">
+		<div class="control">
+			<label for="cs-radius">半径 R</label>
+			<div class="input-row">
+				<input id="cs-radius" type="number" value={radius} min="0.1" step="0.1" />
+				<span>mm</span>
+			</div>
+		</div>
+
+		<div class="control">
+			<label for="cs-theta">方位角 θ</label>
+			<div class="input-row">
+				<input id="cs-theta" type="number" value={theta} step="1" />
+				<span>°</span>
+			</div>
+			<p>XY 平面内，从 +X 向 +Y 方向旋转</p>
+		</div>
+
+		<div class="control">
+			<label for="cs-phi">仰角 φ</label>
+			<div class="input-row">
+				<input id="cs-phi" type="number" value={phi} min="-90" max="90" step="1" />
+				<span>°</span>
+			</div>
+			<p>相对于 XY 赤道面，向上为正</p>
+		</div>
+
+		<div class="coordinate-result">
+			<div class="result-title">笛卡尔坐标</div>
+
+			<div class="result-grid">
+				<div>
+					<span>X</span>
+					<strong id="cs-x">0.00</strong>
+					<small>mm</small>
+				</div>
+
+				<div>
+					<span>Y</span>
+					<strong id="cs-y">0.00</strong>
+					<small>mm</small>
+				</div>
+
+				<div>
+					<span>Z</span>
+					<strong id="cs-z">0.00</strong>
+					<small>mm</small>
+				</div>
+			</div>
+		</div>
+
+		<div class="coordinate-formula">
+			<div>x = R cosφ cosθ</div>
+			<div>y = R cosφ sinθ</div>
+			<div>z = R sinφ</div>
+		</div>
+
+		<div class="controls-help">
+			拖动：旋转视角<br />
+			滚轮：缩放
+		</div>
+	</div>
+
+	<div class="three-container" id="coordinate-sphere-view"></div>
+</div>
+
+<style>
+	.coordinate-sphere {
+		display: grid;
+		grid-template-columns: 260px minmax(320px, 1fr);
+		gap: 1.25rem;
+		margin: 2rem 0;
+	}
+
+	.coordinate-controls {
+		padding: 1rem;
+		border: 1px solid var(--border-color, #ddd);
+		border-radius: 10px;
+		background: var(--card-bg, transparent);
+	}
+
+	.control {
+		margin-bottom: 1rem;
+	}
+
+	.control label {
+		display: block;
+		margin-bottom: 0.35rem;
+		font-weight: 600;
+	}
+
+	.input-row {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+	}
+
+	.input-row input {
+		width: 100%;
+		min-width: 0;
+		padding: 0.5rem 0.6rem;
+		border: 1px solid var(--border-color, #ccc);
+		border-radius: 6px;
+		background: transparent;
+		color: inherit;
+		font: inherit;
+	}
+
+	.input-row span {
+		opacity: 0.6;
+	}
+
+	.control p {
+		margin: 0.35rem 0 0;
+		font-size: 0.75rem;
+		line-height: 1.4;
+		opacity: 0.6;
+	}
+
+	.coordinate-result {
+		padding: 0.8rem;
+		margin-top: 1rem;
+		border-radius: 8px;
+		background: rgba(127, 127, 127, 0.08);
+	}
+
+	.result-title {
+		margin-bottom: 0.6rem;
+		font-size: 0.8rem;
+		opacity: 0.65;
+	}
+
+	.result-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.4rem;
+	}
+
+	.result-grid div {
+		min-width: 0;
+	}
+
+	.result-grid span {
+		display: block;
+		font-size: 0.75rem;
+		font-weight: 700;
+	}
+
+	.result-grid strong {
+		display: block;
+		font-family: monospace;
+		font-size: 0.95rem;
+		overflow-wrap: anywhere;
+	}
+
+	.result-grid small {
+		opacity: 0.55;
+	}
+
+	.coordinate-formula {
+		margin-top: 1rem;
+		font-family: monospace;
+		font-size: 0.75rem;
+		line-height: 1.7;
+		opacity: 0.65;
+	}
+
+	.controls-help {
+		margin-top: 1rem;
+		font-size: 0.75rem;
+		line-height: 1.6;
+		opacity: 0.55;
+	}
+
+	.three-container {
+		position: relative;
+		min-height: 480px;
+		border: 1px solid var(--border-color, #ddd);
+		border-radius: 10px;
+		overflow: hidden;
+		background: rgba(127, 127, 127, 0.025);
+		cursor: grab;
+	}
+
+	.three-container:active {
+		cursor: grabbing;
+	}
+
+	.three-container canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	@media (max-width: 760px) {
+		.coordinate-sphere {
+			grid-template-columns: 1fr;
+		}
+
+		.three-container {
+			min-height: 360px;
+		}
+	}
+</style>
+
+<script>
+	import * as THREE from 'three';
+	import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+	const roots = document.querySelectorAll('.coordinate-sphere');
+
+	roots.forEach((root) => {
+		if (root.getAttribute('data-initialized') === 'true') return;
+		root.setAttribute('data-initialized', 'true');
+
+		const container = root.querySelector('#coordinate-sphere-view');
+		const radiusInput = root.querySelector('#cs-radius');
+		const thetaInput = root.querySelector('#cs-theta');
+		const phiInput = root.querySelector('#cs-phi');
+
+		const xOutput = root.querySelector('#cs-x');
+		const yOutput = root.querySelector('#cs-y');
+		const zOutput = root.querySelector('#cs-z');
+
+		if (
+			!container ||
+			!radiusInput ||
+			!thetaInput ||
+			!phiInput ||
+			!xOutput ||
+			!yOutput ||
+			!zOutput
+		) {
+			return;
+		}
+
+		// ------------------------------------------------------------
+		// Scene
+		// ------------------------------------------------------------
+
+		const scene = new THREE.Scene();
+
+		const camera = new THREE.PerspectiveCamera(
+			45,
+			1,
+			0.1,
+			2000
+		);
+
+		camera.position.set(260, 220, 260);
+
+		const renderer = new THREE.WebGLRenderer({
+			antialias: true,
+			alpha: true,
+		});
+
+		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+		renderer.setClearColor(0x000000, 0);
+
+		container.appendChild(renderer.domElement);
+
+		// ------------------------------------------------------------
+		// Controls
+		// ------------------------------------------------------------
+
+		const controls = new OrbitControls(
+			camera,
+			renderer.domElement
+		);
+
+		controls.enableDamping = true;
+		controls.dampingFactor = 0.08;
+		controls.minDistance = 150;
+		controls.maxDistance = 700;
+		controls.target.set(0, 0, 0);
+
+		// ------------------------------------------------------------
+		// Sphere
+		// ------------------------------------------------------------
+
+		const sphereGeometry = new THREE.SphereGeometry(
+			125,
+			48,
+			32
+		);
+
+		const sphereMaterial = new THREE.MeshBasicMaterial({
+			color: 0x888888,
+			transparent: true,
+			opacity: 0.06,
+			depthWrite: false,
+		});
+
+		const sphere = new THREE.Mesh(
+			sphereGeometry,
+			sphereMaterial
+		);
+
+		scene.add(sphere);
+
+		// 球面线框
+		const wireframe = new THREE.LineSegments(
+			new THREE.WireframeGeometry(sphereGeometry),
+			new THREE.LineBasicMaterial({
+				color: 0x888888,
+				transparent: true,
+				opacity: 0.25,
+			})
+		);
+
+		scene.add(wireframe);
+
+		// ------------------------------------------------------------
+		// 坐标轴
+		// ------------------------------------------------------------
+
+		const axes = new THREE.AxesHelper(165);
+		scene.add(axes);
+
+		// ------------------------------------------------------------
+		// XY 赤道面
+		// ------------------------------------------------------------
+
+		const equatorGeometry =
+			new THREE.RingGeometry(124.5, 125, 96);
+
+		const equatorMaterial =
+			new THREE.MeshBasicMaterial({
+				color: 0x888888,
+				transparent: true,
+				opacity: 0.12,
+				side: THREE.DoubleSide,
+				depthWrite: false,
+			});
+
+		const equator = new THREE.Mesh(
+			equatorGeometry,
+			equatorMaterial
+		);
+
+		equator.rotation.x = Math.PI / 2;
+
+		scene.add(equator);
+
+		// ------------------------------------------------------------
+		// 半径线
+		// ------------------------------------------------------------
+
+		const radiusGeometry =
+			new THREE.BufferGeometry().setFromPoints([
+				new THREE.Vector3(0, 0, 0),
+				new THREE.Vector3(0, 0, 125),
+			]);
+
+		const radiusMaterial =
+			new THREE.LineDashedMaterial({
+				color: 0xff4444,
+				dashSize: 5,
+				gapSize: 3,
+				linewidth: 1,
+			});
+
+		const radiusLine = new THREE.Line(
+			radiusGeometry,
+			radiusMaterial
+		);
+
+		radiusLine.computeLineDistances();
+
+		scene.add(radiusLine);
+
+		// ------------------------------------------------------------
+		// 球面目标点
+		// ------------------------------------------------------------
+
+		const pointGeometry =
+			new THREE.SphereGeometry(6, 20, 20);
+
+		const pointMaterial =
+			new THREE.MeshBasicMaterial({
+				color: 0xff3333,
+			});
+
+		const point = new THREE.Mesh(
+			pointGeometry,
+			pointMaterial
+		);
+
+		scene.add(point);
+
+		// ------------------------------------------------------------
+		// 点到球心的方向线
+		// ------------------------------------------------------------
+
+		function updateRadiusLine(position) {
+			const positions =
+				radiusLine.geometry.attributes.position.array;
+
+			positions[0] = 0;
+			positions[1] = 0;
+			positions[2] = 0;
+
+			positions[3] = position.x;
+			positions[4] = position.y;
+			positions[5] = position.z;
+
+			radiusLine.geometry.attributes.position.needsUpdate = true;
+			radiusLine.computeLineDistances();
+		}
+
+		// ------------------------------------------------------------
+		// 坐标计算
+		// ------------------------------------------------------------
+
+		function updateCoordinate() {
+			let R = Number(radiusInput.value);
+			let theta = Number(thetaInput.value);
+			let phi = Number(phiInput.value);
+
+			if (!Number.isFinite(R)) R = 125;
+			if (!Number.isFinite(theta)) theta = 0;
+			if (!Number.isFinite(phi)) phi = 0;
+
+			R = Math.max(0.1, R);
+			phi = Math.max(-90, Math.min(90, phi));
+
+			const thetaRad = THREE.MathUtils.degToRad(theta);
+			const phiRad = THREE.MathUtils.degToRad(phi);
+
+			/*
+			 * 球面坐标：
+			 *
+			 * x = R cosφ cosθ
+			 * y = R cosφ sinθ
+			 * z = R sinφ
+			 */
+
+			const x =
+				R *
+				Math.cos(phiRad) *
+				Math.cos(thetaRad);
+
+			const y =
+				R *
+				Math.cos(phiRad) *
+				Math.sin(thetaRad);
+
+			const z =
+				R *
+				Math.sin(phiRad);
+
+			xOutput.textContent = x.toFixed(2);
+			yOutput.textContent = y.toFixed(2);
+			zOutput.textContent = z.toFixed(2);
+
+			/*
+			 * 可视化球体固定为半径 125 mm。
+			 *
+			 * 如果输入 R 不是 125 mm，
+			 * 将计算出来的方向归一化到球面上。
+			 */
+
+			const direction = new THREE.Vector3(x, y, z);
+
+			if (direction.length() > 0) {
+				direction.normalize().multiplyScalar(125);
+			}
+
+			point.position.copy(direction);
+
+			updateRadiusLine(direction);
+		}
+
+		radiusInput.addEventListener('input', updateCoordinate);
+		thetaInput.addEventListener('input', updateCoordinate);
+		phiInput.addEventListener('input', updateCoordinate);
+
+		// ------------------------------------------------------------
+		// Resize
+		// ------------------------------------------------------------
+
+		function resize() {
+			const width = container.clientWidth;
+			const height = container.clientHeight;
+
+			if (width <= 0 || height <= 0) return;
+
+			camera.aspect = width / height;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize(
+				width,
+				height,
+				false
+			);
+		}
+
+		const resizeObserver =
+			new ResizeObserver(resize);
+
+		resizeObserver.observe(container);
+
+		// ------------------------------------------------------------
+		// Animation
+		// ------------------------------------------------------------
+
+		function animate() {
+			requestAnimationFrame(animate);
+
+			controls.update();
+
+			renderer.render(scene, camera);
+		}
+
+		updateCoordinate();
+		resize();
+		animate();
+	});
+</script>

@@ -20,7 +20,8 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.6",
-    "@astrojs/mdx": "^5.0.6",
+    "@astrojs/markdown-satteri": "^0.4.2",
+    "@astrojs/mdx": "^4.3.14",
     "@astrojs/rss": "^4.0.14",
     "@astrojs/sitemap": "^3.6.0",
     "@astrojs/svelte": "7.2.3",
@@ -64,6 +65,7 @@
     "stylus": "^0.64.0",
     "svelte": "^5.39.8",
     "tailwindcss": "^3.4.19",
+    "three": "^0.186.1",
     "typescript": "^5.9.3",
     "unist-util-visit": "^5.0.0"
   },

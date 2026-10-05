@@ -1,0 +1,199 @@
+
+<div class="coordinate-view">
+  <div class="coordinate-toolbar">
+    <span>3D COORDINATE SYSTEM</span>
+    <button type="button" data-reset>重置视角</button>
+  </div>
+  <div class="coordinate-canvas" aria-label="可交互三维直角坐标系"></div>
+  <div class="coordinate-legend">
+    <span class="axis-x">X 轴</span>
+    <span class="axis-y">Y 轴</span>
+    <span class="axis-z">Z 轴</span>
+    <span>鼠标拖动旋转 · 滚轮缩放</span>
+  </div>
+</div>
+
+<style>
+  .coordinate-view {
+    margin: 1.5rem 0;
+    overflow: hidden;
+    border: 1px solid #353942;
+    border-radius: 12px;
+    background: #11141b;
+    color: #e5e7eb;
+  }
+
+  .coordinate-toolbar,
+  .coordinate-legend {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+
+  .coordinate-toolbar {
+    border-bottom: 1px solid #353942;
+    letter-spacing: 0.08em;
+  }
+
+  .coordinate-toolbar button {
+    padding: 6px 10px;
+    border: 1px solid #505563;
+    border-radius: 6px;
+    background: #252a35;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .coordinate-canvas {
+    height: 420px;
+    min-height: 280px;
+  }
+
+  .coordinate-canvas canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .coordinate-legend {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    border-top: 1px solid #353942;
+    color: #aeb6c5;
+    letter-spacing: normal;
+  }
+
+  .axis-x { color: #ff6b6b; }
+  .axis-y { color: #57d99b; }
+  .axis-z { color: #65a9ff; }
+
+  @media (max-width: 600px) {
+    .coordinate-canvas { height: 320px; }
+    .coordinate-legend { gap: 10px; }
+  }
+</style>
+
+<script>
+  import * as THREE from 'three';
+  import { OrbitControls } from
+    'three/addons/controls/OrbitControls.js';
+
+  document.querySelectorAll('.coordinate-view').forEach((root) => {
+    const container = root.querySelector('.coordinate-canvas');
+    if (!container || container.dataset.ready) return;
+    container.dataset.ready = 'true';
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#11141b');
+
+    const camera = new THREE.PerspectiveCamera(
+  45, 1, 0.1, 1000
+);
+
+camera.up.set(0, 0, 1);
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.target.set(0, 0, 0);
+
+    // XYZ 三条坐标轴，长度为 10 个单位
+    scene.add(new THREE.AxesHelper(5));
+
+    // XY 平面网格；Three.js 的默认网格位于 XZ 平面
+    const grid = new THREE.GridHelper(
+  10, 10, 0x64748b, 0x303846
+);
+
+// 将默认的 XZ 网格旋转到 XY 平面
+grid.rotation.x = Math.PI / 2;
+scene.add(grid);
+
+    // 原点标记
+    const origin = new THREE.Mesh(
+      new THREE.SphereGeometry(0.07, 16, 12),
+      new THREE.MeshBasicMaterial({ color: 0xffffff })
+    );
+    scene.add(origin);
+
+    // 环境光与方向光
+    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+
+    const light = new THREE.DirectionalLight(0xffffff, 2);
+    light.position.set(4, 6, 8);
+    scene.add(light);
+
+    // 让文字标签始终面向相机
+    function makeLabel(text, color) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.font = 'bold 40px sans-serif';
+      ctx.fillStyle = color;
+      ctx.fillText(text, 12, 44);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+          depthTest: false
+        })
+      );
+      sprite.scale.set(0.8, 0.4, 1);
+      return sprite;
+    }
+
+    [
+      ['X', '#ff6b6b', [5.4, 0, 0]],
+      ['Y', '#57d99b', [0, 5.4, 0]],
+      ['Z', '#65a9ff', [0, 0, 5.4]]
+    ].forEach(([text, color, position]) => {
+      const label = makeLabel(text, color);
+      label.position.set(...position);
+      scene.add(label);
+    });
+
+    function resize() {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (!width || !height) return;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+
+    const observer = new ResizeObserver(resize);
+    observer.observe(container);
+    resize();
+
+    function resetView() {
+  camera.up.set(0, 0, 1);
+  camera.position.set(8, -10, 8);
+  controls.target.set(0, 0, 0);
+  controls.update();
+}
+
+    root.querySelector('[data-reset]')
+      ?.addEventListener('click', resetView);
+
+    resetView();
+
+    renderer.setAnimationLoop(() => {
+      controls.update();
+      renderer.render(scene, camera);
+    });
+  });
+</script>
