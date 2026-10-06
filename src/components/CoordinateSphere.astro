@@ -1,3 +1,4 @@
+
 ---
 const {
 	radius = 125,
@@ -194,6 +195,7 @@ const {
 		overflow: hidden;
 		background: rgba(127, 127, 127, 0.025);
 		cursor: grab;
+		touch-action: pan-y;
 	}
 
 	.three-container:active {
@@ -212,7 +214,14 @@ const {
 		}
 
 		.three-container {
-			min-height: 360px;
+			min-height: 0;
+			height: min(360px, 80vw);
+			touch-action: pan-y;
+		}
+
+		.coordinate-controls {
+			width: 100%;
+			box-sizing: border-box;
 		}
 	}
 </style>
@@ -272,6 +281,81 @@ const {
 		renderer.setClearColor(0x000000, 0);
 
 		container.appendChild(renderer.domElement);
+
+		/*
+		 * Mobile touch handling:
+		 *
+		 * - Vertical single-finger movement -> let the page scroll.
+		 * - Horizontal single-finger movement -> rotate the 3D view.
+		 *
+		 * OrbitControls is created immediately afterwards. The listener
+		 * below is registered first, so a vertical gesture can disable
+		 * OrbitControls before it gets a chance to consume the gesture.
+		 */
+		const isCoarsePointer =
+			window.matchMedia('(pointer: coarse)').matches;
+
+		let touchMode = 'pending';
+		let touchStartX = 0;
+		let touchStartY = 0;
+
+		if (isCoarsePointer) {
+			renderer.domElement.addEventListener(
+				'touchstart',
+				(event) => {
+					if (event.touches.length !== 1) {
+						touchMode = 'orbit';
+						return;
+					}
+
+					touchMode = 'pending';
+					touchStartX = event.touches[0].clientX;
+					touchStartY = event.touches[0].clientY;
+				},
+				{ passive: true }
+			);
+
+			renderer.domElement.addEventListener(
+				'touchmove',
+				(event) => {
+					if (event.touches.length !== 1) return;
+					if (touchMode !== 'pending') return;
+
+					const dx =
+						event.touches[0].clientX - touchStartX;
+					const dy =
+						event.touches[0].clientY - touchStartY;
+
+					if (Math.hypot(dx, dy) < 8) return;
+
+					if (Math.abs(dy) > Math.abs(dx) * 1.15) {
+						// Give the vertical gesture back to the page.
+						touchMode = 'scroll';
+						controls.enabled = false;
+					} else {
+						touchMode = 'orbit';
+					}
+				},
+				{ passive: true }
+			);
+
+			const restoreControls = () => {
+				touchMode = 'pending';
+				controls.enabled = true;
+			};
+
+			renderer.domElement.addEventListener(
+				'touchend',
+				restoreControls,
+				{ passive: true }
+			);
+
+			renderer.domElement.addEventListener(
+				'touchcancel',
+				restoreControls,
+				{ passive: true }
+			);
+		}
 
 		// ------------------------------------------------------------
 		// Controls
